@@ -47,9 +47,9 @@ const toyotaFont = localFont({
 })
 
 export const metadata: Metadata = {
-  title: 'v0 App',
-  description: 'Created with v0',
-  generator: 'v0.app',
+  title: 'Toyota Drumtao',
+  description: 'An exciting microsite experience by Toyota.',
+  generator: 'Craftech360',
 }
 
 export default function RootLayout({
