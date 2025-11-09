@@ -214,29 +214,29 @@ export default function CityPopup({ cityConfig, onClose, onPlay }: CityPopupProp
         </div>
 
         {/* Title */}
-        <h1 className="text-4xl sm:text-5xl text-center mb-4 text-black font-bold">DRUM TAO</h1>
+        <h1 className="text-4xl sm:text-5xl text-center mb-3 text-black font-bold">DRUM TAO</h1>
 
         {/* City Badge */}
-        <div className="text-red-500 font-bold py-2 px-0 text-center mb-4 text-xl">
+        <div className="text-red-500 font-bold py-2 px-0 text-center mb-3 text-xl">
           {city_name.toUpperCase()}
         </div>
 
         {/* Date Info */}
-        <div className="text-center mb-8">
-          <p className="text-black font-semibold text-xl sm:text-base">{date}</p>
-          <p className="text-black font-semibold text-xl sm:text-base">{day}</p>
+        <div className="text-center mb-3">
+          <p className="text-black font-semibold text-lg sm:text-base">{date}</p>
+          <p className="text-black font-semibold text-lg sm:text-base">{day}</p>
         </div>
 
         {/* Venue */}
         <div className="relative m-8 text-center">
           {/* Title overlay */}
-          <p className="absolute -top-3 left-1/2 -translate-x-1/2 bg-white px-4 text-xl text-black font-bold">
+          <p className="absolute -top-3 left-1/2 -translate-x-1/2 bg-white px-4 text-lg text-black font-bold">
             Venue
           </p>
 
           {/* Bordered venue box */}
           <div className="border-3 border-red-500 p-4">
-            <p className="text-black text-2xl font-bold sm:text-base leading-relaxed whitespace-pre-line">
+            <p className="text-black text-xl font-bold sm:text-base leading-relaxed whitespace-pre-line">
               {formattedVenue}
             </p>
           </div>
@@ -249,7 +249,7 @@ export default function CityPopup({ cityConfig, onClose, onPlay }: CityPopupProp
         </div>
 
         {/* Play Button */}
-       <div className="flex justify-center mb-12">
+       <div className="flex justify-center mb-8">
         <button onClick={onPlay}
           className="w-[80vw] bg-red-600 text-white py-3 sm:py-4 text-base font-semibold uppercase sm:text-lg hover:bg-red-700 transition-colors"
         >Register Now

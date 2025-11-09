@@ -98,7 +98,7 @@ export default function TermsConditionsPage({ onBack }: TermsConditionsPageProps
 
           <button
             onClick={onBack} 
-            className="w-full bg-red-600 text-white uppercase py-4 text-lg hover:bg-red-700 transition-colors disabled:bg-gray-500"
+            className="w-full bg-red-600 text-white mb-8 font-semibold uppercase py-4 text-lg hover:bg-red-700 transition-colors disabled:bg-gray-500"
           >
             Continue
           </button>

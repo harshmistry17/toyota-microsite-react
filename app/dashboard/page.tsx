@@ -1,4 +1,4 @@
-import DashboardPage from "@/components/dashboard-page"
+import DashboardWrapper from "@/components/dashboard-wrapper"
 import { supabaseAdmin } from "@/lib/supabase" // <-- Import the admin client
 import { calculateStats } from "@/lib/utils" // <-- Import the stats helper
 
@@ -30,9 +30,9 @@ export default async function Dashboard() {
   const stats = calculateStats(users || [])
   const cityNames = cities?.map(c => c.city_name) || []
 
-  // 5. Pass data to the Client Component
+  // 5. Pass data to the Client Component with Auth Wrapper
  return (
-  <DashboardPage
+  <DashboardWrapper
     initialUsers={users || []}
     allCities={cities || []} // Pass full city data
     stats={stats}

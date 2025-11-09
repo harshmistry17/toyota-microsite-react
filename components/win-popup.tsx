@@ -131,7 +131,7 @@ export default function WinPopup({ registrationData, gameResults, onFinish, onCl
 }, [registrationData])
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center z-50 px-4 bg-black/80">
+    <div className="fixed inset-0 flex items-center justify-center z-50 px-4 bg-black/90">
       <div className="bg-white sm:p-8 max-w-md w-full border border-gray-800 shadow-2xl relative">
 
           {/* Hero Image */}
@@ -150,8 +150,8 @@ export default function WinPopup({ registrationData, gameResults, onFinish, onCl
             <h1 className="text-4xl font-bold mb-4">
               Arigato <br /> (Thankyou !!!!)
             </h1>
-            <p className="text-black text-md mb-8 font-bold">
-              Your registration has been successfully completed.
+            <p className="text-black text-md mb-8 font-semibold">
+              Your registration has been <br/> successfully completed.
             </p>
 
             {/* CTA Button */}
