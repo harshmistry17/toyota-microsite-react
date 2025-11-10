@@ -46,6 +46,7 @@ interface DashboardPageProps {
 export default function DashboardPage({ initialUsers, allCities }: DashboardPageProps) {
   const router = useRouter()
   const [users, setUsers] = useState<UserData[]>(initialUsers)
+  const [isLoading, setIsLoading] = useState<boolean>(initialUsers.length === 0)
   const [cityFilter, setCityFilter] = useState<string>("all")
   const [ageFilter, setAgeFilter] = useState<AgeRange>("all")
   const [entriesPerPage, setEntriesPerPage] = useState<number>(10)
@@ -57,14 +58,38 @@ export default function DashboardPage({ initialUsers, allCities }: DashboardPage
     router.push("/login")
   }
 
+  // ✅ Fallback: Fetch users client-side if initialUsers is empty
+  useEffect(() => {
+    if (initialUsers.length === 0) {
+      console.log('[Client] Initial users empty, fetching from client...')
+      const fetchUsers = async () => {
+        const { data, error } = await supabase
+          .from("toyota_microsite_users")
+          .select("*")
+          .order("created_at", { ascending: false })
+
+        if (error) {
+          console.error('[Client] Error fetching users:', error)
+        } else if (data) {
+          console.log('[Client] Fetched users from client:', data.length)
+          setUsers(data)
+        }
+        setIsLoading(false)
+      }
+      fetchUsers()
+    }
+  }, [initialUsers.length])
+
   // ✅ Realtime listener
   useEffect(() => {
+    console.log('Setting up realtime channel...')
     const channel = supabase
       .channel("toyota-microsite-users-changes")
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "toyota_microsite_users" },
         (payload) => {
+          console.log('Realtime event received:', payload)
           setUsers((prev) => {
             if (payload.eventType === "INSERT") return [payload.new as UserData, ...prev]
             if (payload.eventType === "UPDATE")
@@ -75,8 +100,16 @@ export default function DashboardPage({ initialUsers, allCities }: DashboardPage
           })
         }
       )
-      .subscribe()
-    return () => supabase.removeChannel(channel)
+    //   .subscribe()
+    // return () => supabase.removeChannel(channel)
+    .subscribe((status) => {
+      console.log('Realtime subscription status:', status)
+    })
+    
+  return () => {
+    console.log('Cleaning up realtime channel...')
+    supabase.removeChannel(channel)
+  }
   }, [])
 
   // ✅ Sort newest first
@@ -231,6 +264,12 @@ export default function DashboardPage({ initialUsers, allCities }: DashboardPage
       {/* Header with QR Scanner and Logout Button */}
       <div className="flex items-center justify-between mb-8">
         <h1 className="text-4xl font-bold text-red-600">Admin Dashboard</h1>
+        {isLoading && (
+          <div className="flex items-center gap-2 text-yellow-500">
+            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-yellow-500"></div>
+            <span className="text-sm">Loading data...</span>
+          </div>
+        )}
         <div className="flex gap-3">
           <Link href="/qr">
             <Button className="bg-red-600 hover:bg-red-700 text-white">

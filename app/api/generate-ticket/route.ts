@@ -199,12 +199,12 @@ export async function POST(req: Request) {
                 <text x="50%" y="50%"
                   dominant-baseline="middle"
                   text-anchor="middle"
-                  style="font-size: 50px; font-weight: bold; fill: #fff; font-family: sans-serif; text-transform: uppercase;">
+                  style="font-size: 30px; font-weight: bold; fill: #fff; font-family: sans-serif; text-transform: uppercase;">
                   ${name.toUpperCase()}
                 </text>
               </svg>
             `),
-            top: 145,
+            top: 125,
             left: 0,
           },
           {
