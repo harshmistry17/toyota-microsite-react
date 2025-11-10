@@ -188,29 +188,29 @@ export async function POST(req: Request) {
 
     // 🟡 CASE 2: Other cities → Generate ticket
     else {
-      const qrCodeBuffer = await qrcode.toBuffer(uid, { type: "png", width: 70, margin: 1 })
+      const qrCodeBuffer = await qrcode.toBuffer(uid, { type: "png", width: 170, margin: 1 })
       const templateBuffer = await getTemplateBuffer()
 
       const finalImageBuffer = await sharp(templateBuffer)
         .composite([
           {
             input: Buffer.from(`
-              <svg width="347" height="80">
+              <svg width="694" height="80">
                 <text x="50%" y="50%"
                   dominant-baseline="middle"
                   text-anchor="middle"
-                  style="font-size: 30px; font-weight: bold; fill: #fff; font-family: sans-serif; text-transform: uppercase;">
+                  style="font-size: 70px; font-weight: bold; fill: #fff; font-family: sans-serif; text-transform: uppercase;">
                   ${name.toUpperCase()}
                 </text>
               </svg>
             `),
-            top: 165,
+            top: 350,
             left: 0,
           },
           {
-            input: await sharp(qrCodeBuffer).resize({ width: 70, height: 70 }).toBuffer(),
-            top: 260,
-            left: Math.floor((347 - 70) / 2),
+            input: await sharp(qrCodeBuffer).resize({ width: 200, height: 200 }).toBuffer(),
+            top: 517,
+            left: 247,
           },
         ])
         .png()

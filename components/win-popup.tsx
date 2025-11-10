@@ -71,11 +71,11 @@
 
 "use client"
 
-import { useEffect } from "react"
+import { useEffect, useRef } from "react"
 import { storage, type UserData, type UserGameResult } from "@/lib/storage"
 import type { RegistrationData } from "@/app/page"
 // We no longer need the client-side supabase import here
-// import { supabase } from "@/lib/supabase" 
+// import { supabase } from "@/lib/supabase"
 
 interface WinPopupProps {
   registrationData: RegistrationData | null
@@ -85,13 +85,13 @@ interface WinPopupProps {
 }
 
 export default function WinPopup({ registrationData, gameResults, onFinish, onClose }: WinPopupProps) {
+  const hasSentRef = useRef(false)
+
   useEffect(() => {
   if (!registrationData || !registrationData.uid) return
 
-  let hasSent = false
-
-  if (!hasSent) {
-    hasSent = true
+  if (hasSentRef.current) return
+  hasSentRef.current = true
 
     const userData: UserData = {
       id: registrationData.email,
@@ -127,7 +127,6 @@ export default function WinPopup({ registrationData, gameResults, onFinish, onCl
       .catch(error => {
         console.error("Error calling /api/generate-ticket:", error)
       })
-  }
 }, [registrationData])
 
   return (

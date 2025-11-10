@@ -282,12 +282,16 @@ export default function RegistrationPage({
               type="text"
               name="name"
               placeholder="Full Name"
+              maxLength={10}
               value={formData.name} // Value from prop
               onChange={handleChange}
               style={{ backgroundColor: '#222222', fontSize: '18px' }}
               className="w-full px-4 py-3 text-white placeholder-white focus:outline-none focus:border-red-500"
             />
-            {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name}</p>}
+            <div className="flex justify-between items-center mt-1">
+              {errors.name && <p className="text-red-500 text-sm">{errors.name}</p>}
+              {/* <span className="text-gray-400 text-xs">{formData.name.length}/10</span> */}
+            </div>
           </div>
 
           {/* Date of Birth */}
@@ -360,12 +364,16 @@ export default function RegistrationPage({
               type="tel"
               name="mobile"
               placeholder="Mobile Number"
+              maxLength={10}
               value={formData.mobile} // Value from prop
               onChange={handleChange}
               style={{ backgroundColor: '#222222', fontSize: '18px' }}
               className="w-full px-4 py-3 text-white placeholder-white focus:outline-none focus:border-red-500"
             />
-            {errors.mobile && <p className="text-red-500 text-sm mt-1">{errors.mobile}</p>}
+            <div className="flex justify-between items-center mt-1">
+              {errors.mobile && <p className="text-red-500 text-sm">{errors.mobile}</p>}
+              {/* <span className="text-gray-400 text-xs">{formData.mobile.length}/10</span> */}
+            </div>
           </div>
 
           {/* Email Address */}

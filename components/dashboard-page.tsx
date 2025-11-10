@@ -159,7 +159,7 @@ export default function DashboardPage({ initialUsers, allCities }: DashboardPage
 
   // ✅ Generate QR
   const handleGenerateQR = async (uid: string) => {
-    const qrDataUrl = await QRCode.toDataURL(uid, { width: 70, margin: 1 })
+    const qrDataUrl = await QRCode.toDataURL(uid, { width: 200, margin: 2 })
     const link = document.createElement("a")
     link.href = qrDataUrl
     link.download = `${uid}-qr.png`
