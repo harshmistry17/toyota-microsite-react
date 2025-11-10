@@ -204,12 +204,12 @@ export async function POST(req: Request) {
                 </text>
               </svg>
             `),
-            top: 125,
+            top: 165,
             left: 0,
           },
           {
             input: await sharp(qrCodeBuffer).resize({ width: 70, height: 70 }).toBuffer(),
-            top: 215,
+            top: 260,
             left: Math.floor((347 - 70) / 2),
           },
         ])

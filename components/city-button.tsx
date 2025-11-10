@@ -27,12 +27,13 @@ function formatDate(dateString: string) {
 
 export function CityButton({ name, date, image, onClick }: CityButtonProps) {
   return (
+    
     <Button
       variant="ghost" // Removes background and border
-      className="h-auto p-0 bg-transparent hover:bg-gray-100 dark:hover:bg-gray-800 mb-12" // Removes hover bg
+      className="h-auto  p-0 bg-transparent hover:bg-gray-100 dark:hover:bg-gray-800 mb-12" // Removes hover bg
       onClick={onClick}
     >
-      <div className="flex flex-col justify-center items-center p-2">
+      <div className="flex flex-col flex-wrap  justify-center items-center p-2">
         <Image
           src={image}
           alt={name}

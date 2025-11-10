@@ -16,7 +16,7 @@ export default function ParticipationSteps() {
 
     <div className="p-[2px]  rounded-[25px] bg-gradient-to-b from-red-500 from-60%  to-81%">
     <div className="rounded-[25px] p-6 sm:p-8 bg-gradient-to-b from-[#222222] to-[#050505]">
-    <h2 className="text-2xl sm:text-xl font-bold text-red-500 mb-6">HOW TO PARTICIPATE :</h2>
+    <h2 className="text-2xl sm:text-lg font-bold text-red-500 mb-6">HOW TO PARTICIPATE :</h2>
 
     <div className="space-y-4">
       {steps.map((step) => (
