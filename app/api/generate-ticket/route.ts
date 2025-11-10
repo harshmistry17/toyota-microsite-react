@@ -183,7 +183,7 @@ export async function POST(req: Request) {
   // 🟢 CASE 1: Vijayawada → Use Supabase hosted image
     if (city.toLowerCase().trim() === "vijayawada") {
       publicImageUrl = "https://ozkbnimjuhaweigscdby.supabase.co/storage/v1/object/public/toyota-user-tickets/default/vijayawada-email.png"
-      // publicImageUrl = "https://ozkbnimjuhaweigscdby.supabase.co/storage/v1/object/public/toyota-user-tickets/default/Emailer.png" // landing page image
+      // publicImageUrl = "https://ozkbnimjuhaweigscdby.supabase.co/storage/v1/object/public/toyota-user-tickets/default/Emailer.png" // landscape
     }
 
     // 🟡 CASE 2: Other cities → Generate ticket
@@ -199,12 +199,12 @@ export async function POST(req: Request) {
                 <text x="50%" y="50%"
                   dominant-baseline="middle"
                   text-anchor="middle"
-                  style="font-size: 50px; font-weight: bold; fill: #fff; font-family: sans-serif; text-transform: uppercase;">
+                  style="font-size: 30px; font-weight: bold; fill: #fff; font-family: sans-serif; text-transform: uppercase;">
                   ${name.toUpperCase()}
                 </text>
               </svg>
             `),
-            top: 145,
+            top: 125,
             left: 0,
           },
           {

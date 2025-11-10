@@ -50,7 +50,7 @@ export async function POST(req: Request) {
   : "TBA"
 
     // Create RSVP URLs with base URL from environment
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000" || "https://toyotadrumtao.com/"
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://toyotadrumtao.com"
     const rsvpYesUrl = `${baseUrl}/api/rsvp-confirm?uid=${uid}&response=yes`
     const rsvpNoUrl = `${baseUrl}/api/rsvp-confirm?uid=${uid}&response=no`
 
