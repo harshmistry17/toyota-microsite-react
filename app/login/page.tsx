@@ -63,8 +63,6 @@ export default function LoginPage() {
               Login
             </button>
           </form>
-
-          <p className="text-center text-gray-500 text-sm mt-6">Demo credentials: admin / root</p>
         </div>
       </div>
     </div>

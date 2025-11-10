@@ -183,7 +183,7 @@ export async function POST(req: Request) {
   // 🟢 CASE 1: Vijayawada → Use Supabase hosted image
     if (city.toLowerCase().trim() === "vijayawada") {
       publicImageUrl = "https://ozkbnimjuhaweigscdby.supabase.co/storage/v1/object/public/toyota-user-tickets/default/vijayawada-email.png"
-      // publicImageUrl = "https://ozkbnimjuhaweigscdby.supabase.co/storage/v1/object/public/toyota-user-tickets/default/Emailer.png" // landscape
+      // publicImageUrl = "https://ozkbnimjuhaweigscdby.supabase.co/storage/v1/object/public/toyota-user-tickets/default/Emailer.png" // landing page image
     }
 
     // 🟡 CASE 2: Other cities → Generate ticket
@@ -238,7 +238,7 @@ export async function POST(req: Request) {
     })
 
     const mailOptions = {
-      from: `"Toyota Event" <${process.env.EMAIL_USER}>`,
+      from: `"Toyota DrumTao" <${process.env.EMAIL_USER}>`,
       to: email,
       subject: "Your Registration Confirmation 🎉",
       html: `

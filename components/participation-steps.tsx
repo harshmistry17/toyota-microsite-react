@@ -20,8 +20,8 @@ export default function ParticipationSteps() {
 
     <div className="space-y-4">
       {steps.map((step) => (
-        <div key={step.number} className="flex gap-4">
-          <div className="text-red-500 text-md font-bold flex-shrink-0 w-20">STEP {step.number}:</div>
+        <div key={step.number} className="flex">
+          <div className="text-red-500 text-md font-semibold flex-shrink-0 w-18">STEP {step.number}:</div>
           <p className={`${step.color} text-md sm:text-base leading-relaxed`}>{step.title}</p>
         </div>
       ))}

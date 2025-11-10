@@ -1,7 +1,9 @@
 "use client"
 
 import { useState, useEffect, useMemo } from "react"
+import { useRouter } from "next/navigation"
 import { supabase } from "@/lib/supabase-client"
+import { Toaster, toast } from "sonner"
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table"
@@ -21,6 +23,9 @@ import {
   Users,
   Ticket,
   MessageCircle,
+  ScanLine,
+  LogOut,
+  Mail,
 } from "lucide-react"
 import QRCode from "qrcode"
 import {
@@ -29,6 +34,8 @@ import {
   checkAgeRange,
 } from "@/lib/utils"
 import { UserData, CityConfig, AgeRange, AGE_RANGES } from "@/lib/types"
+import Link from "next/link"
+import { auth } from "@/lib/auth"
 
 interface DashboardPageProps {
   initialUsers: UserData[]
@@ -37,12 +44,18 @@ interface DashboardPageProps {
 }
 
 export default function DashboardPage({ initialUsers, allCities }: DashboardPageProps) {
+  const router = useRouter()
   const [users, setUsers] = useState<UserData[]>(initialUsers)
   const [cityFilter, setCityFilter] = useState<string>("all")
   const [ageFilter, setAgeFilter] = useState<AgeRange>("all")
   const [entriesPerPage, setEntriesPerPage] = useState<number>(10)
   const [currentPage, setCurrentPage] = useState<number>(1)
   const [selectedUids, setSelectedUids] = useState<Set<string>>(new Set())
+
+  const handleLogout = () => {
+    auth.logout()
+    router.push("/login")
+  }
 
   // ✅ Realtime listener
   useEffect(() => {
@@ -128,8 +141,15 @@ export default function DashboardPage({ initialUsers, allCities }: DashboardPage
       body: JSON.stringify({ uid, name, email }),
     })
     const data = await res.json()
-    if (data.success) alert(`Email sent to ${name}`)
-    else alert(`Failed: ${data.message}`)
+    if (data.success) {
+      toast.success(`Email sent to ${name}`, {
+        position: "bottom-right",
+      })
+    } else {
+      toast.error(`Failed: ${data.message}`, {
+        position: "bottom-right",
+      })
+    }
   }
 
   // ✅ Send to selected users
@@ -138,6 +158,42 @@ export default function DashboardPage({ initialUsers, allCities }: DashboardPage
     const selectedUsers = filteredUsers.filter((u) => selectedUids.has(u.uid))
     for (const user of selectedUsers) {
       await handleSendEmail(user.uid, user.name, user.email)
+    }
+  }
+
+  // ✅ Send RSVP email to selected users
+  const handleSendRSVPSelected = async () => {
+    if (selectedUids.size === 0) return
+    const selectedUsers = filteredUsers.filter((u) => selectedUids.has(u.uid))
+    for (const user of selectedUsers) {
+      if (user.city) {
+        await handleSendRSVPEmail(user.uid, user.name, user.email, user.city)
+      }
+    }
+  }
+
+  // ✅ Send RSVP email to one user
+  const handleSendRSVPEmail = async (uid: string, name: string, email: string | null, city: string) => {
+    if (!email) {
+      toast.error("User email is missing", {
+        position: "bottom-right",
+      })
+      return
+    }
+    const res = await fetch("/api/send-rsvp", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ uid, name, email, city }),
+    })
+    const data = await res.json()
+    if (data.success) {
+      toast.success(`RSVP email sent to ${name}`, {
+        position: "bottom-right",
+      })
+    } else {
+      toast.error(`Failed: ${data.message}`, {
+        position: "bottom-right",
+      })
     }
   }
 
@@ -171,7 +227,27 @@ export default function DashboardPage({ initialUsers, allCities }: DashboardPage
   // ✅ UI
   return (
     <div className="min-h-screen bg-black text-white p-6 md:p-10 font-sans">
-      <h1 className="text-4xl font-bold text-red-600 mb-8">Admin Dashboard</h1>
+      <Toaster richColors closeButton />
+      {/* Header with QR Scanner and Logout Button */}
+      <div className="flex items-center justify-between mb-8">
+        <h1 className="text-4xl font-bold text-red-600">Admin Dashboard</h1>
+        <div className="flex gap-3">
+          <Link href="/qr">
+            <Button className="bg-red-600 hover:bg-red-700 text-white">
+              <ScanLine className="w-5 h-5 mr-2" />
+              QR Scanner
+            </Button>
+          </Link>
+          <Button
+            onClick={handleLogout}
+            variant="outline"
+            className="border-red-600 text-red-600 hover:bg-red-600 hover:text-white"
+          >
+            <LogOut className="w-5 h-5 mr-2" />
+            Logout
+          </Button>
+        </div>
+      </div>
 
       {/* === Count Cards Section === */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
@@ -187,7 +263,7 @@ export default function DashboardPage({ initialUsers, allCities }: DashboardPage
               {liveCities.map((city) => (
                 <div
                   key={city.city_name}
-                  className="aspect-square flex flex-col justify-center items-center bg-gray-50 border rounded-md p-2"
+                  className="flex flex-col justify-center items-center bg-gray-50 border rounded-md p-2"
                 >
                   <span className="text-xs font-semibold text-center">{city.city_name}</span>
                   <span className="text-lg font-bold">{citywiseUserCounts[city.city_name] ?? 0}</span>
@@ -209,7 +285,7 @@ export default function DashboardPage({ initialUsers, allCities }: DashboardPage
               {liveCities.map((city) => (
                 <div
                   key={city.city_name}
-                  className="aspect-square flex flex-col justify-center items-center bg-gray-50 border rounded-md p-2"
+                  className="flex flex-col justify-center items-center bg-gray-50 border rounded-md p-2"
                 >
                   <span className="text-xs font-semibold text-center">{city.city_name}</span>
                   <span className="text-lg font-bold">{citywiseRSVPCounts[city.city_name] ?? 0}</span>
@@ -281,6 +357,15 @@ export default function DashboardPage({ initialUsers, allCities }: DashboardPage
             >
               <Send className="w-4 h-4 mr-2" />
               Send Selected ({selectedUids.size})
+            </Button>
+
+            <Button
+              disabled={selectedUids.size === 0}
+              onClick={handleSendRSVPSelected}
+              className="bg-blue-600 hover:bg-blue-700 text-white"
+            >
+              <Mail className="w-4 h-4 mr-2" />
+              Send RSVP Mail ({selectedUids.size})
             </Button>
           </div>
         </CardHeader>

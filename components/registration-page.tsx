@@ -272,7 +272,7 @@ export default function RegistrationPage({
 
       {/* Registration Form */}
       <div className="max-w-2xl mx-auto px-4 py-8">
-        <h1 className="text-3xl font-bold text-center mb-8 text-pretty">Let's Get You Started</h1>
+        <h1 className="text-3xl font-bold text-center mb-8 mt-6 text-pretty">Let's Get You Started</h1>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* ... (input fields remain the same, using props for value/onChange) ... */}
@@ -300,7 +300,7 @@ export default function RegistrationPage({
     placeholder="Select your date of birth" // native placeholder for desktop
     max={new Date().toISOString().split("T")[0]} // prevent future dates
     style={{ backgroundColor: '#222222', fontSize: '18px' }}
-    className="w-full px-4 py-3 text-white rounded-lg focus:outline-none focus:border-red-500 bg-[#222222] text-[18px] appearance-none"
+    className="w-full px-4 py-3 text-white focus:outline-none focus:border-red-500 bg-[#222222] text-[18px] appearance-none"
   />
 
   {/* Fake placeholder only for mobile (hide on desktop) */}
@@ -455,7 +455,7 @@ export default function RegistrationPage({
           <button
             type="submit"
             disabled={isLoading} // Disable button when loading
-            className="w-full bg-red-600 text-white py-4 font-bold text-lg hover:bg-red-700 transition-colors disabled:bg-gray-500"
+            className="w-full bg-red-600 text-white py-4 mb-8 font-semibold text-lg hover:bg-red-700 transition-colors disabled:bg-gray-500"
           >
             {isLoading ? "Submitting..." : "SUBMIT"}
           </button>

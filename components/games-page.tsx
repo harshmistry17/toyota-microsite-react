@@ -57,9 +57,21 @@ export default function GamesPage({ registrationData, onComplete }: GamesPagePro
         <h1 className="text-2xl font-bold text-center mb-2">Ace the quiz and unlock your pass!</h1>
 
         <div className="space-y-4">
-          <QuizAccordion onComplete={handleQuizComplete} completed={isQuizDone} />
-          <TwoTruthsAccordion onComplete={handleTwoTruthsComplete} completed={isTwoTruthsDone} />
-          <InstrumentsAccordion onComplete={handleInstrumentsComplete} completed={isInstrumentsDone} />
+          <QuizAccordion
+            onComplete={handleQuizComplete}
+            completed={isQuizDone}
+            disabled={false}
+          />
+          <TwoTruthsAccordion
+            onComplete={handleTwoTruthsComplete}
+            completed={isTwoTruthsDone}
+            disabled={!isQuizDone}
+          />
+          <InstrumentsAccordion
+            onComplete={handleInstrumentsComplete}
+            completed={isInstrumentsDone}
+            disabled={!isTwoTruthsDone}
+          />
         </div>
 
         {/* Progress Indicator */}
