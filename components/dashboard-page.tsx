@@ -167,11 +167,11 @@ export default function DashboardPage({ initialUsers, allCities }: DashboardPage
   }
 
   // ✅ Send email to one
-  const handleSendEmail = async (uid: string, name: string, email: string) => {
+  const handleSendEmail = async (uid: string, name: string, email: string, city: string) => {
     const res = await fetch("/api/generate-ticket", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ uid, name, email }),
+      body: JSON.stringify({ uid, name, email, city }),
     })
     const data = await res.json()
     if (data.success) {
@@ -190,7 +190,7 @@ export default function DashboardPage({ initialUsers, allCities }: DashboardPage
     if (selectedUids.size === 0) return
     const selectedUsers = filteredUsers.filter((u) => selectedUids.has(u.uid))
     for (const user of selectedUsers) {
-      await handleSendEmail(user.uid, user.name, user.email)
+      await handleSendEmail(user.uid, user.name, user.email, user.city || "")
     }
   }
 
@@ -496,7 +496,7 @@ export default function DashboardPage({ initialUsers, allCities }: DashboardPage
                             size="sm"
                             className="bg-red-600 hover:bg-red-700 text-white"
                             onClick={() =>
-                              handleSendEmail(user.uid, user.name, user.email)
+                              handleSendEmail(user.uid, user.name, user.email, user.city || "")
                             }
                           >
                             <Send className="w-4 h-4 mr-2" />
