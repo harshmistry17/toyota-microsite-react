@@ -82,30 +82,72 @@ export async function POST(req: Request) {
       publicImageUrl = urlData.publicUrl
     }
 
-    // --- 5. Send Email with unified message ---
+    // --- 5. Send Email with city-specific message ---
     const transporter = nodemailer.createTransport({
       service: "gmail",
       auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS },
     })
 
-    const mailOptions = {
-      from: `"Toyota DrumTao" <${process.env.EMAIL_USER}>`,
-      to: email,
-      subject: "Your Registration Confirmation 🎉",
-      html: `
+    // Define city-specific email bodies
+    let emailBody = ""
+    const normalizedCity = city.toLowerCase().trim()
+
+    if (normalizedCity === "chennai") {
+      emailBody = `
+        <div style="font-family: Arial, sans-serif; padding: 20px; text-align: left; color: #333;">
+          <h1 style="color: #000;">Hi ${name},</h1>
+          <p style="font-size: 16px; line-height: 1.5;">
+            Congratulations on winning your buddy pass.<br><br>
+            We will be sharing an RSVP mail on 18th November, to confirm your attendance.
+          </p>
+          <div style="margin: 20px 0;">
+            <img
+              src="${publicImageUrl}"
+              alt="Your Event Ticket"
+              style="max-width: 100%; height: auto; border-radius: 8px;"
+            />
+          </div>
+          <p style="font-size: 16px; margin-top: 20px;">
+            Warm regards
+          </p>
+        </div>
+      `
+    } else if (normalizedCity === "vijayawada") {
+      emailBody = `
+        <div style="font-family: Arial, sans-serif; padding: 20px; text-align: left; color: #333;">
+          <h1 style="color: #000;">Hi ${name},</h1>
+          <p style="font-size: 16px; line-height: 1.5;">
+            Your registration has been successfully completed.<br><br>
+            We will be sharing an RSVP mail on 16th November, to confirm your attendance.
+          </p>
+          <div style="margin: 20px 0;">
+            <img
+              src="${publicImageUrl}"
+              alt="Your Event Ticket"
+              style="max-width: 100%; height: auto; border-radius: 8px;"
+            />
+          </div>
+          <p style="font-size: 16px; margin-top: 20px;">
+            Warm Regards,
+          </p>
+        </div>
+      `
+    } else {
+      // Default body for other cities
+      emailBody = `
         <div style="font-family: Arial, sans-serif; padding: 20px; text-align: left; color: #333;">
           <h1 style="color: #000;">Hi ${name},</h1>
           <p style="font-size: 16px; line-height: 1.5;">
             Your registration has been successfully completed.<br><br>
             In the meantime, keep an eye on your inbox and WhatsApp for further updates on your admission status and event details.
-<br><br>
-We’ll be sharing an RSVP email prior the event to confirm your 
-attendance.          </p>
+            <br><br>
+            We'll be sharing an RSVP email prior the event to confirm your attendance.
+          </p>
           <div style="margin: 20px 0;">
-            <img 
-              src="${publicImageUrl}" 
-              alt="Your Event Ticket" 
-              style="max-width: 100%; height: auto; border-radius: 8px;" 
+            <img
+              src="${publicImageUrl}"
+              alt="Your Event Ticket"
+              style="max-width: 100%; height: auto; border-radius: 8px;"
             />
           </div>
           <p style="font-size: 16px; margin-top: 20px;">
@@ -113,7 +155,14 @@ attendance.          </p>
             <strong>Toyota Event Team</strong>
           </p>
         </div>
-      `,
+      `
+    }
+
+    const mailOptions = {
+      from: `"Toyota DrumTao" <${process.env.EMAIL_USER}>`,
+      to: email,
+      subject: "Your Registration Confirmation 🎉",
+      html: emailBody,
     }
 
     await transporter.sendMail(mailOptions)
