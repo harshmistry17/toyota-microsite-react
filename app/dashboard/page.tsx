@@ -1,6 +1,10 @@
 import DashboardWrapper from "@/components/dashboard-wrapper"
-import { supabaseAdmin } from "@/lib/supabase" // <-- Import the admin client
+import { supabaseAdmin } from "@/lib/supabase-admin" // <-- Import the admin client
 import { calculateStats } from "@/lib/utils" // <-- Import the stats helper
+
+// Force dynamic rendering to prevent caching
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
 
 // This is a Server Component
 export default async function Dashboard() {
