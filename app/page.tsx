@@ -145,11 +145,11 @@ export default function Home() {
     }
 
     // --- FIX: Implement Vijayawada skip logic ---
-    if (selectedCityConfig?.city_name === "Vijayawada") {
-      setCurrentPage("win"); // Skip to WinPopup
-    } else {
+    // if (selectedCityConfig?.city_name === "Vijayawada") {
+    //   setCurrentPage("win"); // Skip to WinPopup
+    // } else {
       setCurrentPage("games"); // Go to GamesPage
-    }
+    // }
     // -------------------------------------------
   };
 
