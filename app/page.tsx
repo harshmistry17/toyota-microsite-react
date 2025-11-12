@@ -61,6 +61,7 @@ export default function Home() {
   // State for user UID and loading
   const [createdUserUID, setCreatedUserUID] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [emailError, setEmailError] = useState<string>("");
 
   // Fetch cities from Supabase on load
   useEffect(() => {
@@ -97,11 +98,32 @@ export default function Home() {
   // --- FIX 3: Update function signature and logic ---
   const handleRegistrationSubmit = async (data: Omit<RegistrationData, "uid">) => {
     setIsLoading(true);
+    setEmailError(""); // Clear any previous email error
 
-    // 1. Insert user into Supabase
+    // 1. Check if email already exists
+    const { data: existingUser, error: checkError } = await supabase
+      .from("toyota_microsite_users")
+      .select("email")
+      .eq("email", data.email)
+      .maybeSingle();
+
+    if (checkError) {
+      console.error("Error checking email:", checkError);
+      setIsLoading(false);
+      setEmailError("Email already registered.");
+      return;
+    }
+
+    if (existingUser) {
+      setIsLoading(false);
+      setEmailError("Email already registered. Please use a different email address.");
+      return;
+    }
+
+    // 2. Insert user into Supabase
     const { data: newUser, error } = await supabase
       .from("toyota_microsite_users")
-      .insert({
+      .insert([{
         name: data.name,
         birthdate: data.dob,
         occupation: data.occupation,
@@ -116,7 +138,7 @@ export default function Home() {
         rsvp_status: false,
         is_attended_event: false,
         // ----------------------
-      })
+      }])
       .select("uid") // Select the 'uid'
       .single(); // Expect a single object back
 
@@ -215,6 +237,8 @@ export default function Home() {
           termsAccepted={termsAccepted}
           setTermsAccepted={setTermsAccepted}
           isLoading={isLoading}
+          externalEmailError={emailError}
+          clearEmailError={() => setEmailError("")}
         />
     );
   }

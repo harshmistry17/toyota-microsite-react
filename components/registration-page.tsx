@@ -29,6 +29,8 @@ interface RegistrationPageProps {
   termsAccepted: boolean
   setTermsAccepted: React.Dispatch<React.SetStateAction<boolean>>
   isLoading: boolean // Add loading prop
+  externalEmailError?: string // Add external email error prop
+  clearEmailError?: () => void // Add function to clear email error
 }
 
 export default function RegistrationPage({
@@ -40,6 +42,8 @@ export default function RegistrationPage({
   termsAccepted,
   setTermsAccepted,
   isLoading, // Destructure loading prop
+  externalEmailError, // Destructure external email error
+  clearEmailError, // Destructure clear email error function
 }: RegistrationPageProps) {
   const [errors, setErrors] = useState<Record<string, string>>({})
 
@@ -75,6 +79,10 @@ export default function RegistrationPage({
     setFormData((prev) => ({ ...prev, [name]: value }))
     if (errors[name]) {
       setErrors((prev) => ({ ...prev, [name]: "" }))
+    }
+    // Clear external email error when user types in email field
+    if (name === "email" && clearEmailError) {
+      clearEmailError()
     }
   }
 
@@ -205,7 +213,9 @@ export default function RegistrationPage({
               style={{ backgroundColor: '#222222', fontSize: '18px' }}
               className="w-full px-4 py-3 text-white placeholder-white focus:outline-none focus:border-red-500"
             />
-            {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
+            {(errors.email || externalEmailError) && (
+              <p className="text-red-500 text-sm mt-1">{errors.email || externalEmailError}</p>
+            )}
           </div>
 
           {/* Car Model */}
