@@ -3,6 +3,7 @@ import nodemailer from "nodemailer"
 import qrcode from "qrcode"
 import sharp from "sharp"
 import path from "path"
+import { createCanvas } from "canvas"
 import { supabaseAdmin } from "@/lib/supabase"
 
 async function getTemplateBuffer() {
@@ -16,47 +17,36 @@ async function getTemplateBuffer() {
 }
 
 async function createTextImage(text: string, maxWidth: number): Promise<Buffer> {
-  // Escape special characters for SVG
-  const escapedText = text
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&apos;')
-
-  // Use only web-safe system fonts that Sharp/librsvg can render
-  // These fonts are available on most Linux systems (including Vercel)
-  const textSvg = Buffer.from(`
-    <svg width="${maxWidth}" height="80" xmlns="http://www.w3.org/2000/svg">
-      <text 
-        x="${maxWidth / 2}" 
-        y="50" 
-        text-anchor="middle" 
-        dominant-baseline="middle"
-        font-family="DejaVu Sans, Arial, Helvetica, sans-serif"
-        font-size="32"
-        font-weight="bold"
-        fill="#ffffff"
-        letter-spacing="2"
-      >
-        ${escapedText.toUpperCase()}
-      </text>
-    </svg>
-  `)
-
-  // Convert SVG to PNG using Sharp
-  // Use density: 72 (default) to match the SVG dimensions exactly
-  try {
-    const buffer = await sharp(textSvg).png().toBuffer()
-    // Ensure the output matches our intended dimensions
-    return await sharp(buffer)
-      .resize({ width: maxWidth, height: 80, fit: 'contain' })
-      .png()
-      .toBuffer()
-  } catch (error) {
-    console.error("Error creating text image:", error)
-    throw error
+  const canvas = createCanvas(maxWidth, 80)
+  const ctx = canvas.getContext('2d')
+  
+  // Set transparent background
+  ctx.clearRect(0, 0, maxWidth, 80)
+  
+  // Configure text styling
+  ctx.fillStyle = '#ffffff'
+  ctx.font = 'bold 32px sans-serif'
+  ctx.textAlign = 'center'
+  ctx.textBaseline = 'middle'
+  
+  // Draw the text (uppercase with letter spacing)
+  const upperText = text.toUpperCase()
+  const letterSpacing = 2
+  
+  // Measure text width to apply letter spacing
+  const metrics = ctx.measureText(upperText)
+  const totalSpacing = (upperText.length - 1) * letterSpacing
+  const textWidth = metrics.width + totalSpacing
+  
+  // Draw text with letter spacing
+  let x = (maxWidth - textWidth) / 2
+  for (let i = 0; i < upperText.length; i++) {
+    const char = upperText[i]
+    ctx.fillText(char, x, 40)
+    x += ctx.measureText(char).width + letterSpacing
   }
+  
+  return canvas.toBuffer('image/png')
 }
 
 export async function POST(req: Request) {
