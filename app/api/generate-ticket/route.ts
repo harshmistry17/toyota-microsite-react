@@ -3,7 +3,19 @@ import nodemailer from "nodemailer"
 import qrcode from "qrcode"
 import sharp from "sharp"
 import path from "path"
+
 import { supabaseAdmin } from "@/lib/supabase"
+
+const FONT_PATH = path.join(process.cwd(), "public", "fonts", "ToyotaType-Bold.ttf")
+
+function escapePangoText(text: string) {
+  return text
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&apos;")
+}
 
 async function getTemplateBuffer() {
   const templatePath = path.join(process.cwd(), "public", "placeholder", "email-placeholder.png")
@@ -16,26 +28,24 @@ async function getTemplateBuffer() {
 }
 
 async function createTextImage(text: string) {
-  // Create a simple SVG with basic web-safe fonts
-  const textSvg = Buffer.from(`
-    <svg width="694" height="80">
-      <style>
-        text {
-          font-family: Arial, Helvetica, sans-serif;
-          font-size: 30px;
-          font-weight: bold;
-          fill: #ffffff;
-          text-transform: uppercase;
-        }
-      </style>
-      <text x="347" y="50" text-anchor="middle" dominant-baseline="middle">
-        ${text.toUpperCase()}
-      </text>
-    </svg>
-  `)
+  const safeText = escapePangoText(text.toUpperCase())
+  const markup = `<span foreground="#ffffff">${safeText}</span>`
 
   try {
-    return await sharp(textSvg).png().toBuffer()
+    return await sharp({
+      text: {
+        text: markup,
+        font: "ToyotaType 30",
+        fontfile: FONT_PATH,
+        width: 694,
+        height: 80,
+        align: "centre",
+        dpi: 96,
+        rgba: true,
+      },
+    })
+      .png()
+      .toBuffer()
   } catch (error) {
     console.error("Error creating text image:", error)
     throw error

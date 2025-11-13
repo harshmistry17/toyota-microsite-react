@@ -87,7 +87,7 @@ export default function WinPopup({ registrationData, gameResults, onFinish, onCl
             {/* CTA Button */}
           <button
   onClick={onFinish}
-  className="w-full mx-[10px] bg-red-600 mb-6 text-white py-3 sm:py-4 text-base font-semibold uppercase sm:text-lg hover:bg-red-700 transition-colors"
+  className="w-[366px] mx-[10px] bg-red-600 mb-6 text-white text-base font-semibold py-3 uppercase sm:text-lg hover:bg-red-700 transition-colors"
 >
   FINISH
 </button>
