@@ -101,24 +101,24 @@ export default function Home() {
     setEmailError(""); // Clear any previous email error
 
     // 1. Check if email already exists
-    const { data: existingUser, error: checkError } = await supabase
-      .from("toyota_microsite_users")
-      .select("email")
-      .eq("email", data.email)
-      .maybeSingle();
+    // const { data: existingUser, error: checkError } = await supabase
+    //   .from("toyota_microsite_users")
+    //   .select("email")
+    //   .eq("email", data.email)
+    //   .maybeSingle();
 
-    if (checkError) {
-      console.error("Error checking email:", checkError);
-      setIsLoading(false);
-      setEmailError("Email already registered.");
-      return;
-    }
+    // if (checkError) {
+    //   console.error("Error checking email:", checkError);
+    //   setIsLoading(false);
+    //   setEmailError("Email already registered.");
+    //   return;
+    // }
 
-    if (existingUser) {
-      setIsLoading(false);
-      setEmailError("Email already registered. Please use a different email address.");
-      return;
-    }
+    // if (existingUser) {
+    //   setIsLoading(false);
+    //   setEmailError("Email already registered. Please use a different email address.");
+    //   return;
+    // }
 
     // 2. Insert user into Supabase
     const { data: newUser, error } = await supabase
