@@ -1,221 +1,193 @@
-export const runtime = "nodejs";
-export const dynamic = "force-dynamic";
-import { NextResponse } from "next/server"
-import nodemailer from "nodemailer"
-import qrcode from "qrcode"
-import sharp from "sharp"
-import path from "path"
-import { supabaseAdmin } from "@/lib/supabase"
-import fs from "fs"
-import { createCanvas, registerFont } from "canvas"
+import { NextResponse } from "next/server";
+import nodemailer from "nodemailer";
+import qrcode from "qrcode";
+import sharp from "sharp";
+import path from "path";
+import { supabaseAdmin } from "@/lib/supabase";
 
-// Register font (place .ttf file in /public/fonts)
-const fontPath = path.join(process.cwd(), "public", "fonts", "Poppins-Bold.ttf")
-registerFont(fontPath, { family: "Poppins" })
-
-
+// --- 1️⃣ Load the ticket template ---
 async function getTemplateBuffer() {
-  const imageUrl = "https://ozkbnimjuhaweigscdby.supabase.co/storage/v1/object/public/toyota-user-tickets/default/email-placeholder.png"
+  const templatePath = path.join(process.cwd(), "public", "placeholder", "email-placeholder.png");
   try {
-    const response = await fetch(imageUrl)
-    if (!response.ok) throw new Error(`Failed to fetch template image: ${response.status}`)
-    const arrayBuffer = await response.arrayBuffer()
-    return Buffer.from(arrayBuffer)
+    return await sharp(templatePath).toBuffer();
   } catch (error) {
-    console.error("Failed to load email template image:", error)
-    throw new Error("Failed to load email template image from Supabase URL")
+    console.error("Failed to load email template image:", error);
+    throw new Error("Failed to load email template image at: " + templatePath);
   }
 }
 
-export async function createTextImage(text: string) {
-  const width = 694
-  const height = 80
-  const canvas = createCanvas(width, height)
-  const ctx = canvas.getContext("2d")
-
-  // Background transparent
-  ctx.clearRect(0, 0, width, height)
-
-  // Text setup
-  ctx.fillStyle = "#ffffff"
-  ctx.textAlign = "center"
-  ctx.textBaseline = "middle"
-  ctx.font = "bold 30px Poppins"
-
-  ctx.fillText(text.toUpperCase(), width / 2, height / 2)
-
-  return canvas.toBuffer("image/png")
+// --- 2️⃣ Create SVG text (no fonts / no TTF required) ---
+function createTextSvg(text: string) {
+  return Buffer.from(`
+    <svg width="1080" height="300">
+      <style>
+        .name {
+          fill: #ffffff;
+          font-size: 64px;
+          font-weight: 700;
+          font-family: sans-serif;
+          text-anchor: middle;
+          dominant-baseline: middle;
+          text-transform: uppercase;
+        }
+      </style>
+      <text x="540" y="150" class="name">${text}</text>
+    </svg>
+  `);
 }
-
 
 export async function POST(req: Request) {
   try {
-    const { uid, name, email, city } = await req.json()
-
-    console.log("Received request:", { uid, name, email, city })
+    const { uid, name, email, city } = await req.json();
+    console.log("Received request:", { uid, name, email, city });
 
     if (!uid || !name || !email || !city) {
       return NextResponse.json(
         { success: false, message: "Missing required fields (uid, name, email, or city)." },
         { status: 400 }
-      )
+      );
     }
 
-    let publicImageUrl = ""
+    let publicImageUrl = "";
 
-    // 🟢 CASE 1: Vijayawada → Use Supabase hosted image
+    // 🟢 CASE 1: Vijayawada → Use pre-made image
     if (city.toLowerCase().trim() === "vijayawada") {
-      publicImageUrl = "https://ozkbnimjuhaweigscdby.supabase.co/storage/v1/object/public/toyota-user-tickets/default/vijayawada-email.png"
+      publicImageUrl =
+        "https://ozkbnimjuhaweigscdby.supabase.co/storage/v1/object/public/toyota-user-tickets/default/vijayawada-email.png";
     }
 
-    // 🟡 CASE 2: Other cities → Generate ticket
+    // 🟡 CASE 2: Generate new ticket (SVG text + QR)
     else {
-      console.log("Generating ticket for:", name)
-      
-      const qrCodeBuffer = await qrcode.toBuffer(uid, { type: "png", width: 170, margin: 1 })
-      const templateBuffer = await getTemplateBuffer()
-      
-      // Create text as a separate image
-      const textBuffer = await createTextImage(name)
-      console.log("Text buffer created successfully")
+      console.log("Generating ticket for:", name);
+
+      const qrCodeBuffer = await qrcode.toBuffer(uid, {
+        type: "png",
+        width: 170,
+        margin: 1,
+      });
+      const templateBuffer = await getTemplateBuffer();
+
+      // SVG text overlay (no font dependency)
+      const textSvgBuffer = createTextSvg(name);
+      console.log("SVG text created successfully");
 
       const finalImageBuffer = await sharp(templateBuffer)
         .composite([
+          // name text
+          { input: textSvgBuffer, top: 350, left: 0 },
+          // QR code
           {
-            input: textBuffer,
-            top: 350,
-            left: 0,
-          },
-          {
-            input: await sharp(qrCodeBuffer).resize({ width: 200, height: 200 }).toBuffer(),
+            input: await sharp(qrCodeBuffer)
+              .resize({ width: 200, height: 200 })
+              .toBuffer(),
             top: 517,
             left: 247,
           },
         ])
         .png()
-        .toBuffer()
+        .toBuffer();
 
-      console.log("Final image buffer created")
+      console.log("Final ticket composed successfully");
 
-      const imagePath = `/${uid}-${Date.now()}.png`
+      const imagePath = `/${uid}-${Date.now()}.png`;
 
       const { data: uploadData, error: uploadError } = await supabaseAdmin.storage
         .from("toyota-user-tickets")
-        .upload(imagePath, finalImageBuffer, { contentType: "image/png", cacheControl: "3600" })
+        .upload(imagePath, finalImageBuffer, {
+          contentType: "image/png",
+          cacheControl: "3600",
+        });
 
       if (uploadError) {
-        console.error("Supabase upload error:", uploadError)
-        throw new Error(`Supabase upload error: ${uploadError.message}`)
+        console.error("Supabase upload error:", uploadError);
+        throw new Error(`Supabase upload error: ${uploadError.message}`);
       }
 
       const { data: urlData } = supabaseAdmin.storage
         .from("toyota-user-tickets")
-        .getPublicUrl(uploadData.path)
+        .getPublicUrl(uploadData.path);
 
-      publicImageUrl = urlData.publicUrl
-      console.log("Image uploaded successfully:", publicImageUrl)
+      publicImageUrl = urlData.publicUrl;
+      console.log("Ticket uploaded successfully:", publicImageUrl);
     }
 
-    // --- 5. Send Email with city-specific message ---
+    // --- 5️⃣ Send Email ---
     const transporter = nodemailer.createTransport({
       service: "gmail",
       auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS },
-    })
+    });
 
-    // Define city-specific email bodies
-    let emailBody = ""
-    const normalizedCity = city.toLowerCase().trim()
+    const normalizedCity = city.toLowerCase().trim();
+    let emailBody = "";
 
     if (normalizedCity === "chennai") {
       emailBody = `
-        <div style="font-family: Arial, sans-serif; padding: 20px; text-align: left; color: #333;">
-          <h1 style="color: #000;">Hi ${name},</h1>
-          <p style="font-size: 16px; line-height: 1.5;">
+        <div style="font-family:sans-serif;padding:20px;text-align:left;color:#333;">
+          <h1 style="color:#000;">Hi ${name},</h1>
+          <p style="font-size:16px;line-height:1.5;">
             Congratulations on winning your buddy pass.<br><br>
-            We will be sharing an RSVP mail on 18th November, to confirm your attendance.
+            We will be sharing an RSVP mail on 18th November to confirm your attendance.
           </p>
-          <div style="margin: 20px 0;">
-            <img
-              src="${publicImageUrl}"
-              alt="Your Event Ticket"
-              style="max-width: 100%; height: auto; border-radius: 8px;"
-            />
+          <div style="margin:20px 0;">
+            <img src="${publicImageUrl}" alt="Your Event Ticket"
+                 style="max-width:100%;height:auto;border-radius:8px;"/>
           </div>
-          <p style="font-size: 16px; margin-top: 20px;">
-            Warm regards
-          </p>
-        </div>
-      `
+          <p style="font-size:16px;margin-top:20px;">Warm regards</p>
+        </div>`;
     } else if (normalizedCity === "vijayawada") {
       emailBody = `
-        <div style="font-family: Arial, sans-serif; padding: 20px; text-align: left; color: #333;">
-          <h1 style="color: #000;">Hi ${name},</h1>
-          <p style="font-size: 16px; line-height: 1.5;">
+        <div style="font-family:sans-serif;padding:20px;text-align:left;color:#333;">
+          <h1 style="color:#000;">Hi ${name},</h1>
+          <p style="font-size:16px;line-height:1.5;">
             Your registration has been successfully completed.<br><br>
-            We will be sharing an RSVP mail on 16th November, to confirm your attendance.
+            We will be sharing an RSVP mail on 16th November to confirm your attendance.
           </p>
-          <div style="margin: 20px 0;">
-            <img
-              src="${publicImageUrl}"
-              alt="Your Event Ticket"
-              style="max-width: 100%; height: auto; border-radius: 8px;"
-            />
+          <div style="margin:20px 0;">
+            <img src="${publicImageUrl}" alt="Your Event Ticket"
+                 style="max-width:100%;height:auto;border-radius:8px;"/>
           </div>
-          <p style="font-size: 16px; margin-top: 20px;">
-            Warm Regards,
-          </p>
-        </div>
-      `
+          <p style="font-size:16px;margin-top:20px;">Warm Regards,</p>
+        </div>`;
     } else {
-      // Default body for other cities
       emailBody = `
-        <div style="font-family: Arial, sans-serif; padding: 20px; text-align: left; color: #333;">
-          <h1 style="color: #000;">Hi ${name},</h1>
-          <p style="font-size: 16px; line-height: 1.5;">
+        <div style="font-family:sans-serif;padding:20px;text-align:left;color:#333;">
+          <h1 style="color:#000;">Hi ${name},</h1>
+          <p style="font-size:16px;line-height:1.5;">
             Your registration has been successfully completed.<br><br>
-            In the meantime, keep an eye on your inbox and WhatsApp for further updates on your admission status and event details.
-            <br><br>
-            We'll be sharing an RSVP email prior the event to confirm your attendance.
+            Keep an eye on your inbox and WhatsApp for further updates about admission status and event details.<br><br>
+            We'll be sharing an RSVP email prior to the event to confirm your attendance.
           </p>
-          <div style="margin: 20px 0;">
-            <img
-              src="${publicImageUrl}"
-              alt="Your Event Ticket"
-              style="max-width: 100%; height: auto; border-radius: 8px;"
-            />
+          <div style="margin:20px 0;">
+            <img src="${publicImageUrl}" alt="Your Event Ticket"
+                 style="max-width:100%;height:auto;border-radius:8px;"/>
           </div>
-          <p style="font-size: 16px; margin-top: 20px;">
-            Warm regards,<br/>
-            <strong>Toyota Event Team</strong>
-          </p>
-        </div>
-      `
+          <p style="font-size:16px;margin-top:20px;">Warm regards,<br/><strong>Toyota Event Team</strong></p>
+        </div>`;
     }
 
-    const mailOptions = {
+    await transporter.sendMail({
       from: `"Toyota DrumTao" <${process.env.EMAIL_USER}>`,
       to: email,
       subject: "Your Registration Confirmation 🎉",
       html: emailBody,
-    }
+    });
 
-    await transporter.sendMail(mailOptions)
-    console.log("Email sent successfully to:", email)
+    console.log("Email sent successfully to:", email);
 
-    // --- 6. Update database ---
+    // --- 6️⃣ Update database ---
     const { error: dbError } = await supabaseAdmin
       .from("toyota_microsite_users")
       .update({ image_link: publicImageUrl, email_status: true })
-      .eq("uid", uid)
+      .eq("uid", uid);
 
-    if (dbError) console.error("Supabase DB update error:", dbError)
+    if (dbError) console.error("Supabase DB update error:", dbError);
 
-    return NextResponse.json({ success: true, message: "Ticket generated and email sent!" })
+    return NextResponse.json({ success: true, message: "Ticket generated and email sent!" });
   } catch (error) {
-    console.error("Full error in /api/generate-ticket:", error)
+    console.error("Full error in /api/generate-ticket:", error);
     return NextResponse.json(
       { success: false, message: "Failed to generate ticket or send email.", error: String(error) },
       { status: 500 }
-    )
+    );
   }
 }
