@@ -7,12 +7,15 @@ import { supabaseAdmin } from "@/lib/supabase"
 import fs from "fs"
 
 async function getTemplateBuffer() {
-  const templatePath = path.join(process.cwd(), "public", "placeholder", "email-placeholder.png")
+  const imageUrl = "https://ozkbnimjuhaweigscdby.supabase.co/storage/v1/object/public/toyota-user-tickets/default/email-placeholder.png"
   try {
-    return await sharp(templatePath).toBuffer()
+    const response = await fetch(imageUrl)
+    if (!response.ok) throw new Error(`Failed to fetch template image: ${response.status}`)
+    const arrayBuffer = await response.arrayBuffer()
+    return Buffer.from(arrayBuffer)
   } catch (error) {
     console.error("Failed to load email template image:", error)
-    throw new Error("Failed to load email template image at: " + templatePath)
+    throw new Error("Failed to load email template image from Supabase URL")
   }
 }
 
