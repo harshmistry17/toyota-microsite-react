@@ -1,73 +1,4 @@
-// "use client"
 
-// import { useEffect } from "react"
-// import { storage, type UserData, type UserGameResult } from "@/lib/storage"
-// import type { RegistrationData } from "@/app/page"
-
-// interface WinPopupProps {
-//   registrationData: RegistrationData | null
-//   gameResults: UserGameResult
-//   onFinish: () => void
-// }
-
-// export default function WinPopup({ registrationData, gameResults, onFinish }: WinPopupProps) {
-//   useEffect(() => {
-//     if (registrationData) {
-//       const userData: UserData = {
-//         id: registrationData.email,
-//         name: registrationData.name,
-//         email: registrationData.email,
-//         mobile: registrationData.mobile,
-//         dob: registrationData.dob,
-//         occupation: registrationData.occupation,
-//         city: registrationData.city,
-//         gameResults,
-//         timestamp: Date.now(),
-//       }
-//       storage.saveUser(userData)
-
-//           // send email to user
-//     fetch("/api/sendMail", {
-//       method: "POST",
-//       headers: { "Content-Type": "application/json" },
-//       body: JSON.stringify({
-//         name: registrationData.name,
-//         email: registrationData.email,
-//       }),
-//     })
-//   }
-//   }, [registrationData, gameResults])
-
-//   return (
-//     <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center px-4">
-
-//       <div className="flex-1 flex items-center justify-center">
-//         <div className="text-center max-w-md mx-auto">
-//           {/* Hero Image */}
-//           <div className="mb-8">
-//             <img
-//               src="/ui/page1.png"
-//               alt="Drum Tao"
-//               className="w-full h-auto rounded-lg"
-//             />
-//           </div>
-
-//           {/* Success Message */}
-//           <h1 className="text-4xl font-bold mb-4">Arigato <br/> (Thankyou !!!!)</h1>
-//           <p className="text-gray-300 text-lg mb-12">Your registration has been successfully completed.</p>
-
-//           {/* CTA Button */}
-//           <button
-//             onClick={onFinish}
-//             className="w-full bg-red-600 text-white py-4 font-bold text-lg rounded-lg hover:bg-red-700 transition-colors"
-//           >
-//             FINISH
-//           </button>
-//         </div>
-//       </div>
-//     </div>
-//   )
-// }
 
 "use client"
 
@@ -154,12 +85,13 @@ export default function WinPopup({ registrationData, gameResults, onFinish, onCl
             </p>
 
             {/* CTA Button */}
-            <button
-              onClick={onFinish}
-              className="w-full bg-red-600 mb-6 text-white py-3 sm:py-4 text-base font-semibold uppercase sm:text-lg hover:bg-red-700 transition-colors"
-            >
-              FINISH
-            </button>
+          <button
+  onClick={onFinish}
+  className="w-full mx-[10px] bg-red-600 mb-6 text-white py-3 sm:py-4 text-base font-semibold uppercase sm:text-lg hover:bg-red-700 transition-colors"
+>
+  FINISH
+</button>
+
           </div>
 
       </div>

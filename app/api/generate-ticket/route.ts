@@ -1,6 +1,3 @@
-
-
-
 import { NextResponse } from "next/server"
 import nodemailer from "nodemailer"
 import qrcode from "qrcode"
@@ -18,9 +15,38 @@ async function getTemplateBuffer() {
   }
 }
 
+async function createTextImage(text: string) {
+  // Create a simple SVG with basic web-safe fonts
+  const textSvg = Buffer.from(`
+    <svg width="694" height="80">
+      <style>
+        text {
+          font-family: Arial, Helvetica, sans-serif;
+          font-size: 30px;
+          font-weight: bold;
+          fill: #ffffff;
+          text-transform: uppercase;
+        }
+      </style>
+      <text x="347" y="50" text-anchor="middle" dominant-baseline="middle">
+        ${text.toUpperCase()}
+      </text>
+    </svg>
+  `)
+
+  try {
+    return await sharp(textSvg).png().toBuffer()
+  } catch (error) {
+    console.error("Error creating text image:", error)
+    throw error
+  }
+}
+
 export async function POST(req: Request) {
   try {
     const { uid, name, email, city } = await req.json()
+
+    console.log("Received request:", { uid, name, email, city })
 
     if (!uid || !name || !email || !city) {
       return NextResponse.json(
@@ -34,27 +60,23 @@ export async function POST(req: Request) {
     // 🟢 CASE 1: Vijayawada → Use Supabase hosted image
     if (city.toLowerCase().trim() === "vijayawada") {
       publicImageUrl = "https://ozkbnimjuhaweigscdby.supabase.co/storage/v1/object/public/toyota-user-tickets/default/vijayawada-email.png"
-      // publicImageUrl = "https://ozkbnimjuhaweigscdby.supabase.co/storage/v1/object/public/toyota-user-tickets/default/Emailer.png" // landscape
     }
 
     // 🟡 CASE 2: Other cities → Generate ticket
     else {
+      console.log("Generating ticket for:", name)
+      
       const qrCodeBuffer = await qrcode.toBuffer(uid, { type: "png", width: 170, margin: 1 })
       const templateBuffer = await getTemplateBuffer()
+      
+      // Create text as a separate image
+      const textBuffer = await createTextImage(name)
+      console.log("Text buffer created successfully")
 
       const finalImageBuffer = await sharp(templateBuffer)
         .composite([
           {
-            input: Buffer.from(`
-              <svg width="694" height="80">
-                <text x="50%" y="50%"
-                  dominant-baseline="middle"
-                  text-anchor="middle"
-                  style="font-size: 70px; font-weight: bold; fill: #fff; font-family: sans-serif; text-transform: uppercase;">
-                  ${name.toUpperCase()}
-                </text>
-              </svg>
-            `),
+            input: textBuffer,
             top: 350,
             left: 0,
           },
@@ -67,19 +89,25 @@ export async function POST(req: Request) {
         .png()
         .toBuffer()
 
+      console.log("Final image buffer created")
+
       const imagePath = `/${uid}-${Date.now()}.png`
 
       const { data: uploadData, error: uploadError } = await supabaseAdmin.storage
         .from("toyota-user-tickets")
         .upload(imagePath, finalImageBuffer, { contentType: "image/png", cacheControl: "3600" })
 
-      if (uploadError) throw new Error(`Supabase upload error: ${uploadError.message}`)
+      if (uploadError) {
+        console.error("Supabase upload error:", uploadError)
+        throw new Error(`Supabase upload error: ${uploadError.message}`)
+      }
 
       const { data: urlData } = supabaseAdmin.storage
         .from("toyota-user-tickets")
         .getPublicUrl(uploadData.path)
 
       publicImageUrl = urlData.publicUrl
+      console.log("Image uploaded successfully:", publicImageUrl)
     }
 
     // --- 5. Send Email with city-specific message ---
@@ -166,6 +194,7 @@ export async function POST(req: Request) {
     }
 
     await transporter.sendMail(mailOptions)
+    console.log("Email sent successfully to:", email)
 
     // --- 6. Update database ---
     const { error: dbError } = await supabaseAdmin
@@ -179,7 +208,7 @@ export async function POST(req: Request) {
   } catch (error) {
     console.error("Full error in /api/generate-ticket:", error)
     return NextResponse.json(
-      { success: false, message: "Failed to generate ticket or send email." },
+      { success: false, message: "Failed to generate ticket or send email.", error: String(error) },
       { status: 500 }
     )
   }
