@@ -3,7 +3,17 @@ import nodemailer from "nodemailer"
 import qrcode from "qrcode"
 import sharp from "sharp"
 import path from "path"
+import { createCanvas, registerFont } from "canvas"
 import { supabaseAdmin } from "@/lib/supabase"
+
+// Register the custom font once when the module loads
+const fontPath = path.join(process.cwd(), "app", "fonts", "ToyotaType-Bold.ttf")
+try {
+  registerFont(fontPath, { family: "Toyota Type Bold" })
+  console.log("Custom font registered successfully")
+} catch (error) {
+  console.error("Failed to register custom font:", error)
+}
 
 async function getTemplateBuffer() {
   const templatePath = path.join(process.cwd(), "public", "placeholder", "email-placeholder.png")
@@ -15,41 +25,25 @@ async function getTemplateBuffer() {
   }
 }
 
-async function createTextSvg(text: string): Promise<Buffer> {
-  // Escape special characters for SVG
-  const escapedText = text
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&apos;')
+async function createTextImage(text: string): Promise<Buffer> {
+  // Create a canvas with the dimensions we need
+  const canvas = createCanvas(694, 80)
+  const ctx = canvas.getContext("2d")
 
-  // Create SVG as a buffer
-  const textSvg = Buffer.from(`
-    <svg width="694" height="80" xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <style>
-          @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@700&amp;display=swap');
-        </style>
-      </defs>
-      <text 
-        x="347" 
-        y="50" 
-        text-anchor="middle" 
-        dominant-baseline="middle"
-        font-family="Roboto, Arial, Helvetica, sans-serif"
-        font-size="30"
-        font-weight="bold"
-        fill="#ffffff"
-        style="text-transform: uppercase;"
-      >
-        ${escapedText.toUpperCase()}
-      </text>
-    </svg>
-  `)
+  // Set transparent background
+  ctx.clearRect(0, 0, 694, 80)
 
-  // Return as Buffer - Sharp will handle SVG directly
-  return textSvg
+  // Configure text rendering with custom font
+  ctx.font = "bold 30px 'Toyota Type Bold', Arial, sans-serif"
+  ctx.fillStyle = "#ffffff"
+  ctx.textAlign = "center"
+  ctx.textBaseline = "middle"
+
+  // Draw the text (centered)
+  ctx.fillText(text.toUpperCase(), 347, 40)
+
+  // Convert canvas to PNG buffer
+  return canvas.toBuffer("image/png")
 }
 
 export async function POST(req: Request) {
@@ -79,14 +73,14 @@ export async function POST(req: Request) {
       const qrCodeBuffer = await qrcode.toBuffer(uid, { type: "png", width: 170, margin: 1 })
       const templateBuffer = await getTemplateBuffer()
       
-      // Create text SVG directly
-      const textSvgBuffer = await createTextSvg(name)
-      console.log("Text SVG created successfully")
+      // Create text image using canvas with custom font
+      const textBuffer = await createTextImage(name)
+      console.log("Text image created successfully with custom font")
 
       const finalImageBuffer = await sharp(templateBuffer)
         .composite([
           {
-            input: textSvgBuffer, // Sharp handles SVG directly
+            input: textBuffer,
             top: 350,
             left: 0,
           },
