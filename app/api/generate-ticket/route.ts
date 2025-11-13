@@ -15,7 +15,7 @@ async function getTemplateBuffer() {
   }
 }
 
-async function createTextImage(text: string): Promise<Buffer> {
+async function createTextImage(text: string, maxWidth: number): Promise<Buffer> {
   // Escape special characters for SVG
   const escapedText = text
     .replace(/&/g, '&amp;')
@@ -27,9 +27,9 @@ async function createTextImage(text: string): Promise<Buffer> {
   // Use only web-safe system fonts that Sharp/librsvg can render
   // These fonts are available on most Linux systems (including Vercel)
   const textSvg = Buffer.from(`
-    <svg width="694" height="80" xmlns="http://www.w3.org/2000/svg">
+    <svg width="${maxWidth}" height="80" xmlns="http://www.w3.org/2000/svg">
       <text 
-        x="347" 
+        x="${maxWidth / 2}" 
         y="50" 
         text-anchor="middle" 
         dominant-baseline="middle"
@@ -45,8 +45,14 @@ async function createTextImage(text: string): Promise<Buffer> {
   `)
 
   // Convert SVG to PNG using Sharp
+  // Use density: 72 (default) to match the SVG dimensions exactly
   try {
-    return await sharp(textSvg, { density: 300 }).png().toBuffer()
+    const buffer = await sharp(textSvg).png().toBuffer()
+    // Ensure the output matches our intended dimensions
+    return await sharp(buffer)
+      .resize({ width: maxWidth, height: 80, fit: 'contain' })
+      .png()
+      .toBuffer()
   } catch (error) {
     console.error("Error creating text image:", error)
     throw error
@@ -80,21 +86,68 @@ export async function POST(req: Request) {
       const qrCodeBuffer = await qrcode.toBuffer(uid, { type: "png", width: 170, margin: 1 })
       const templateBuffer = await getTemplateBuffer()
       
-      // Create text image with web-safe fonts
-      const textBuffer = await createTextImage(name)
-      console.log("Text image created successfully")
+      // Get template metadata to ensure proper sizing
+      const templateMetadata = await sharp(templateBuffer).metadata()
+      const templateWidth = templateMetadata.width || 694
+      const templateHeight = templateMetadata.height || 800
+      
+      console.log("Template dimensions:", templateWidth, "x", templateHeight)
+      
+      // Create text image with proper width based on template
+      const textBuffer = await createTextImage(name, templateWidth)
+      const textMetadata = await sharp(textBuffer).metadata()
+      console.log("Text image dimensions:", textMetadata.width, "x", textMetadata.height)
+      
+      // Resize and prepare QR code
+      const resizedQrBuffer = await sharp(qrCodeBuffer)
+        .resize({ width: 200, height: 200 })
+        .toBuffer()
+      
+      const qrMetadata = await sharp(resizedQrBuffer).metadata()
+      console.log("QR code dimensions:", qrMetadata.width, "x", qrMetadata.height)
+
+      // Validate positioning
+      const textTop = 350
+      const textLeft = 0
+      const qrTop = 517
+      const qrLeft = 247
+
+      console.log("Text will be placed at:", { top: textTop, left: textLeft })
+      console.log("Text bounds:", { 
+        right: textLeft + (textMetadata.width || 0), 
+        bottom: textTop + (textMetadata.height || 0) 
+      })
+      console.log("QR will be placed at:", { top: qrTop, left: qrLeft })
+      console.log("QR bounds:", { 
+        right: qrLeft + (qrMetadata.width || 0), 
+        bottom: qrTop + (qrMetadata.height || 0) 
+      })
+
+      // Check if images will fit
+      if (textLeft + (textMetadata.width || 0) > templateWidth) {
+        throw new Error(`Text image (${textMetadata.width}px) exceeds template width (${templateWidth}px)`)
+      }
+      if (textTop + (textMetadata.height || 0) > templateHeight) {
+        throw new Error(`Text image position exceeds template height`)
+      }
+      if (qrLeft + (qrMetadata.width || 0) > templateWidth) {
+        throw new Error(`QR code position exceeds template width`)
+      }
+      if (qrTop + (qrMetadata.height || 0) > templateHeight) {
+        throw new Error(`QR code position exceeds template height`)
+      }
 
       const finalImageBuffer = await sharp(templateBuffer)
         .composite([
           {
             input: textBuffer,
-            top: 350,
-            left: 0,
+            top: textTop,
+            left: textLeft,
           },
           {
-            input: await sharp(qrCodeBuffer).resize({ width: 200, height: 200 }).toBuffer(),
-            top: 517,
-            left: 247,
+            input: resizedQrBuffer,
+            top: qrTop,
+            left: qrLeft,
           },
         ])
         .png()
