@@ -3,25 +3,7 @@ import nodemailer from "nodemailer"
 import qrcode from "qrcode"
 import sharp from "sharp"
 import path from "path"
-import fs from "fs/promises"
 import { supabaseAdmin } from "@/lib/supabase"
-
-// Cache for the base64 encoded font
-let fontBase64Cache: string | null = null
-
-async function getFontBase64() {
-  if (fontBase64Cache) return fontBase64Cache
-  
-  const fontPath = path.join(process.cwd(), "app", "fonts", "ToyotaType-Bold.ttf")
-  try {
-    const fontBuffer = await fs.readFile(fontPath)
-    fontBase64Cache = fontBuffer.toString("base64")
-    return fontBase64Cache
-  } catch (error) {
-    console.error("Failed to load font:", error)
-    throw new Error("Failed to load custom font")
-  }
-}
 
 async function getTemplateBuffer() {
   const templatePath = path.join(process.cwd(), "public", "placeholder", "email-placeholder.png")
@@ -34,9 +16,6 @@ async function getTemplateBuffer() {
 }
 
 async function createTextImage(text: string): Promise<Buffer> {
-  // Get the font as base64
-  const fontBase64 = await getFontBase64()
-  
   // Escape special characters for SVG
   const escapedText = text
     .replace(/&/g, '&amp;')
@@ -45,29 +24,20 @@ async function createTextImage(text: string): Promise<Buffer> {
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&apos;')
 
-  // Create SVG with embedded font
+  // Use only web-safe system fonts that Sharp/librsvg can render
+  // These fonts are available on most Linux systems (including Vercel)
   const textSvg = Buffer.from(`
     <svg width="694" height="80" xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <style type="text/css">
-          @font-face {
-            font-family: 'ToyotaType';
-            src: url(data:font/truetype;charset=utf-8;base64,${fontBase64}) format('truetype');
-            font-weight: bold;
-            font-style: normal;
-          }
-        </style>
-      </defs>
       <text 
         x="347" 
         y="50" 
         text-anchor="middle" 
         dominant-baseline="middle"
-        font-family="ToyotaType, Arial, sans-serif"
-        font-size="30"
+        font-family="DejaVu Sans, Arial, Helvetica, sans-serif"
+        font-size="32"
         font-weight="bold"
         fill="#ffffff"
-        style="text-transform: uppercase;"
+        letter-spacing="2"
       >
         ${escapedText.toUpperCase()}
       </text>
@@ -75,7 +45,12 @@ async function createTextImage(text: string): Promise<Buffer> {
   `)
 
   // Convert SVG to PNG using Sharp
-  return await sharp(textSvg).png().toBuffer()
+  try {
+    return await sharp(textSvg, { density: 300 }).png().toBuffer()
+  } catch (error) {
+    console.error("Error creating text image:", error)
+    throw error
+  }
 }
 
 export async function POST(req: Request) {
@@ -105,9 +80,9 @@ export async function POST(req: Request) {
       const qrCodeBuffer = await qrcode.toBuffer(uid, { type: "png", width: 170, margin: 1 })
       const templateBuffer = await getTemplateBuffer()
       
-      // Create text image with embedded custom font
+      // Create text image with web-safe fonts
       const textBuffer = await createTextImage(name)
-      console.log("Text image created successfully with custom font")
+      console.log("Text image created successfully")
 
       const finalImageBuffer = await sharp(templateBuffer)
         .composite([
