@@ -5,6 +5,12 @@ import sharp from "sharp"
 import path from "path"
 import { supabaseAdmin } from "@/lib/supabase"
 import fs from "fs"
+import { createCanvas, registerFont } from "canvas"
+
+// Register font (place .ttf file in /public/fonts)
+const fontPath = path.join(process.cwd(), "public", "fonts", "Poppins-Bold.ttf")
+registerFont(fontPath, { family: "Poppins" })
+
 
 async function getTemplateBuffer() {
   const imageUrl = "https://ozkbnimjuhaweigscdby.supabase.co/storage/v1/object/public/toyota-user-tickets/default/email-placeholder.png"
@@ -19,37 +25,24 @@ async function getTemplateBuffer() {
   }
 }
 
-async function createTextImage(text: string) {
-  // Load a font from your /public/fonts folder (e.g. public/fonts/Poppins-Bold.ttf)
-  const fontPath = path.join(process.cwd(), "public", "fonts", "Poppins-Bold.ttf")
-  const fontData = fs.readFileSync(fontPath)
-  const fontBase64 = fontData.toString("base64")
+export async function createTextImage(text: string) {
+  const width = 694
+  const height = 80
+  const canvas = createCanvas(width, height)
+  const ctx = canvas.getContext("2d")
 
-  const textSvg = Buffer.from(`
-    <svg width="694" height="80" xmlns="http://www.w3.org/2000/svg">
-      <style>
-        @font-face {
-          font-family: 'Poppins';
-          src: url('data:font/ttf;base64,${fontBase64}') format('truetype');
-        }
-        text {
-          font-family: 'Poppins', sans-serif;
-          font-size: 30px;
-          font-weight: bold;
-          fill: #ffffff;
-          text-transform: uppercase;
-        }
-      </style>
-      <text x="347" y="50" text-anchor="middle" dominant-baseline="middle">${text.toUpperCase()}</text>
-    </svg>
-  `)
+  // Background transparent
+  ctx.clearRect(0, 0, width, height)
 
-  try {
-    return await sharp(textSvg).png().toBuffer()
-  } catch (error) {
-    console.error("Error creating text image:", error)
-    throw error
-  }
+  // Text setup
+  ctx.fillStyle = "#ffffff"
+  ctx.textAlign = "center"
+  ctx.textBaseline = "middle"
+  ctx.font = "bold 30px Poppins"
+
+  ctx.fillText(text.toUpperCase(), width / 2, height / 2)
+
+  return canvas.toBuffer("image/png")
 }
 
 
