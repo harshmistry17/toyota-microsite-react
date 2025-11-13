@@ -19,10 +19,10 @@ export default function WinPopup({ registrationData, gameResults, onFinish, onCl
   const hasSentRef = useRef(false)
 
   useEffect(() => {
-  if (!registrationData || !registrationData.uid) return
+    if (!registrationData || !registrationData.uid) return
 
-  if (hasSentRef.current) return
-  hasSentRef.current = true
+    if (hasSentRef.current) return
+    hasSentRef.current = true
 
     const userData: UserData = {
       id: registrationData.email,
@@ -58,41 +58,41 @@ export default function WinPopup({ registrationData, gameResults, onFinish, onCl
       .catch(error => {
         console.error("Error calling /api/generate-ticket:", error)
       })
-}, [registrationData])
+  }, [registrationData])
 
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50 px-4 bg-black/90">
       <div className="bg-white sm:p-8 max-w-md w-full border border-gray-800 shadow-2xl relative">
 
-          {/* Hero Image */}
-          <div className="relative mb-6">
-            <div className="mb-8">
-              <img
-                src="/ui/page2.png"
-                alt="Drum Tao"
-                className="w-full h-auto"
-              />
-            </div>
+        {/* Hero Image */}
+        <div className="relative mb-6">
+          <div className="mb-8">
+            <img
+              src="/ui/page2.png"
+              alt="Drum Tao"
+              className="w-full h-auto"
+            />
           </div>
+        </div>
 
-          {/* Success Message */}
-          <div className="text-center">
-            <h1 className="text-4xl font-bold mb-4">
-              Arigato <br /> (Thankyou !!!!)
-            </h1>
-            <p className="text-black text-md mb-8 font-semibold">
-              Your registration has been <br/> successfully completed.
-            </p>
+        {/* Success Message */}
+        <div className="text-center">
+          <h1 className="text-4xl font-bold mb-4">
+            Arigato <br /> (Thankyou !!!!)
+          </h1>
+          <p className="text-black text-md mb-8 font-semibold">
+            Your registration has been <br /> successfully completed.
+          </p>
 
-            {/* CTA Button */}
+          {/* CTA Button */}
           <button
-  onClick={onFinish}
-  className="w-[366px] mx-[10px] bg-red-600 mb-6 text-white text-base font-semibold py-3 uppercase sm:text-lg hover:bg-red-700 transition-colors"
->
-  FINISH
-</button>
+            onClick={onFinish}
+            className="w-[366px] mx-[10px] bg-red-600 mb-6 text-white text-base font-semibold py-3 uppercase sm:text-lg hover:bg-red-700 transition-colors"
+          >
+            FINISH
+          </button>
 
-          </div>
+        </div>
 
       </div>
     </div>
