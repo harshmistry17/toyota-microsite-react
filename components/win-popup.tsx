@@ -85,7 +85,7 @@ export default function WinPopup({ registrationData, gameResults, onFinish, onCl
             Arigato <br /> (Thankyou !!!!)
           </h1>
           <p className="text-black text-md mb-8 font-semibold">
-            Your registration has been <br /> successfully completed. <br />Check your email/whatsapp for your buddy pass.
+            Your registration has been <br /> successfully completed. <br />Check your email/whatsapp <br /> for your buddy pass.
           </p>
 
           {/* CTA Button */}
