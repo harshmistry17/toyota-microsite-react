@@ -49,6 +49,10 @@ export default function WinPopup({ registrationData, gameResults, onFinish, onCl
     })
       .then(res => res.json())
       .then(data => {
+
+        console.log("API Response:", data);
+
+        console.log(data.success);
         if (data.success) {
           console.log("Successfully generated ticket and sent email.")
         } else {
@@ -81,13 +85,13 @@ export default function WinPopup({ registrationData, gameResults, onFinish, onCl
             Arigato <br /> (Thankyou !!!!)
           </h1>
           <p className="text-black text-md mb-8 font-semibold">
-            Your registration has been <br /> successfully completed.
+            Your registration has been <br /> successfully completed. <br />Check your email/whatsapp for your buddy pass.
           </p>
 
           {/* CTA Button */}
           <button
             onClick={onFinish}
-            className="w-[366px] mx-[10px] bg-red-600 mb-6 text-white text-base font-semibold py-3 uppercase sm:text-lg hover:bg-red-700 transition-colors"
+            className="w-[288px] mx-[10px] bg-red-600 mb-6 text-white text-base font-semibold py-3 uppercase sm:text-lg hover:bg-red-700 transition-colors"
           >
             FINISH
           </button>

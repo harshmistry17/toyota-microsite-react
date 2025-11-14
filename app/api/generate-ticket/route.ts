@@ -3,7 +3,7 @@ import nodemailer from "nodemailer"
 import qrcode from "qrcode"
 import sharp from "sharp"
 import path from "path"
-import { supabaseAdmin } from "@/lib/supabase"
+import { supabaseAdmin } from "@/lib/supabase/server"
 
 async function getTemplateBuffer() {
   const templatePath = path.join(process.cwd(), "public", "placeholder", "email-placeholder.png")
@@ -195,17 +195,20 @@ export async function POST(req: Request) {
       html: emailBody,
     }
 
-    await transporter.sendMail(mailOptions)
+    // --- 6. Send email and update database concurrently ---
+    // Use Promise.all to ensure both async operations complete before responding.
+    // This is crucial in serverless environments which may terminate execution after a response is sent.
+    const [emailResult, dbResult] = await Promise.all([
+      transporter.sendMail(mailOptions),
+      supabaseAdmin
+        .from("toyota_microsite_users")
+        .update({ image_link: publicImageUrl, email_status: true })
+        .eq("uid", uid),
+    ])
+    
     console.log("Email sent successfully to:", email)
-
-    // --- 6. Update database ---
-    const { error: dbError } = await supabaseAdmin
-      .from("toyota_microsite_users")
-      .update({ image_link: publicImageUrl, email_status: true })
-      .eq("uid", uid)
-
-    if (dbError) console.error("Supabase DB update error:", dbError)
-
+    if (dbResult.error) console.error("Supabase DB update error:", dbResult.error)
+    
     return NextResponse.json({ success: true, message: "Ticket generated and email sent!" })
   } catch (error) {
     console.error("Full error in /api/generate-ticket:", error)
