@@ -1,6 +1,7 @@
+// dashboard/page.tsx
 import DashboardWrapper from "@/components/dashboard-wrapper"
-import { supabaseAdmin } from "@/lib/supabase-admin" // <-- Import the admin client
-import { calculateStats } from "@/lib/utils" // <-- Import the stats helper
+import { supabaseAdmin } from "@/lib/supabase-admin"
+import { calculateStats } from "@/lib/utils"
 
 // Force dynamic rendering to prevent caching
 export const dynamic = 'force-dynamic'
@@ -10,50 +11,77 @@ export const revalidate = 0
 export default async function Dashboard() {
   console.log('[Server] Dashboard - Starting data fetch...')
 
-  // 1. Fetch all users
-  const { data: users, error: usersError } = await supabaseAdmin
-    .from("toyota_microsite_users")
-    .select("*")
-    .order("created_at", { ascending: false })
+  try {
+    // 1. Fetch ALL users with pagination handling
+    let allUsers: any[] = []
+    let page = 0
+    const pageSize = 1000 // Fetch 1000 at a time
+    let hasMore = true
 
-  console.log('[Server] Users fetch result:', {
-    count: users?.length,
-    error: usersError?.message
-  })
+    while (hasMore) {
+      const { data: users, error: usersError } = await supabaseAdmin
+        .from("toyota_microsite_users")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .range(page * pageSize, (page + 1) * pageSize - 1)
+
+      if (usersError) {
+        console.error('[Server] Users fetch error:', usersError)
+        throw usersError
+      }
+
+      if (users && users.length > 0) {
+        allUsers = [...allUsers, ...users]
+        console.log(`[Server] Fetched page ${page + 1}: ${users.length} users (Total so far: ${allUsers.length})`)
+        
+        // If we got fewer records than pageSize, we've reached the end
+        if (users.length < pageSize) {
+          hasMore = false
+        } else {
+          page++
+        }
+      } else {
+        hasMore = false
+      }
+    }
+
+    console.log(`[Server] Total users fetched: ${allUsers.length}`)
 
     // 2. Fetch all city data for filters and count cards
-  const { data: cities, error: citiesError } = await supabaseAdmin
-    .from("toyota_microsite_city_config")
-    .select("*") // <-- fetch all fields, not just city_name
-    .order("city_name", { ascending: true })
+    const { data: cities, error: citiesError } = await supabaseAdmin
+      .from("toyota_microsite_city_config")
+      .select("*")
+      .order("city_name", { ascending: true })
 
-  console.log('[Server] Cities fetch result:', {
-    count: cities?.length,
-    error: citiesError?.message
-  })
+    console.log('[Server] Cities fetch result:', {
+      count: cities?.length,
+      error: citiesError?.message
+    })
 
-  // 3. Handle errors
-  if (usersError || citiesError) {
-    console.error('[Server] Dashboard fetch error:', { usersError, citiesError })
+    if (citiesError) {
+      console.error('[Server] Cities fetch error:', citiesError)
+      throw citiesError
+    }
+
+    // 3. Calculate stats on the server
+    const stats = calculateStats(allUsers || [])
+
+    // 4. Pass data to the Client Component
+    return (
+      <DashboardWrapper
+        initialUsers={allUsers || []}
+        allCities={cities || []}
+        stats={stats}
+      />
+    )
+  } catch (error) {
+    console.error('[Server] Dashboard error:', error)
     return (
       <div className="min-h-screen bg-black text-white p-8">
         <h1 className="text-2xl font-bold text-red-500">Error fetching data</h1>
-        <p>{usersError?.message || citiesError?.message}</p>
+        <p>{error instanceof Error ? error.message : 'Unknown error'}</p>
         <p className="mt-4 text-sm text-gray-400">Check server logs for details</p>
       </div>
     )
   }
-
-  // 4. Calculate stats on the server
-  const stats = calculateStats(users || [])
-  const cityNames = cities?.map(c => c.city_name) || []
-
-  // 5. Pass data to the Client Component with Auth Wrapper
- return (
-  <DashboardWrapper
-    initialUsers={users || []}
-    allCities={cities || []} // Pass full city data
-    stats={stats}
-  />
-)
 }

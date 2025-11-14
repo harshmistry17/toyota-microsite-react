@@ -15,50 +15,6 @@ async function getTemplateBuffer() {
   }
 }
 
-async function createTextImage(text: string, maxWidth: number): Promise<Buffer> {
-  // Escape special characters for SVG
-  const escapedText = text
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&apos;')
-
-  // Use only web-safe system fonts that Sharp/librsvg can render
-  // These fonts are available on most Linux systems (including Vercel)
-  const textSvg = Buffer.from(`
-    <svg width="${maxWidth}" height="80" xmlns="http://www.w3.org/2000/svg">
-      <text 
-        x="${maxWidth / 2}" 
-        y="50" 
-        text-anchor="middle" 
-        dominant-baseline="middle"
-        font-family="DejaVu Sans, Arial, Helvetica, sans-serif"
-        font-size="32"
-        font-weight="bold"
-        fill="#ffffff"
-        letter-spacing="2"
-      >
-        ${escapedText.toUpperCase()}
-      </text>
-    </svg>
-  `)
-
-  // Convert SVG to PNG using Sharp
-  // Use density: 72 (default) to match the SVG dimensions exactly
-  try {
-    const buffer = await sharp(textSvg).png().toBuffer()
-    // Ensure the output matches our intended dimensions
-    return await sharp(buffer)
-      .resize({ width: maxWidth, height: 80, fit: 'contain' })
-      .png()
-      .toBuffer()
-  } catch (error) {
-    console.error("Error creating text image:", error)
-    throw error
-  }
-}
-
 export async function POST(req: Request) {
   try {
     const { uid, name, email, city } = await req.json()
@@ -81,7 +37,7 @@ export async function POST(req: Request) {
 
     // 🟡 CASE 2: Other cities → Generate ticket
     else {
-      console.log("Generating ticket for:", name)
+      console.log("Generating ticket for user:", uid)
       
       const qrCodeBuffer = await qrcode.toBuffer(uid, { type: "png", width: 170, margin: 1 })
       const templateBuffer = await getTemplateBuffer()
@@ -93,11 +49,6 @@ export async function POST(req: Request) {
       
       console.log("Template dimensions:", templateWidth, "x", templateHeight)
       
-      // Create text image with proper width based on template
-      const textBuffer = await createTextImage(name, templateWidth)
-      const textMetadata = await sharp(textBuffer).metadata()
-      console.log("Text image dimensions:", textMetadata.width, "x", textMetadata.height)
-      
       // Resize and prepare QR code
       const resizedQrBuffer = await sharp(qrCodeBuffer)
         .resize({ width: 200, height: 200 })
@@ -107,29 +58,16 @@ export async function POST(req: Request) {
       console.log("QR code dimensions:", qrMetadata.width, "x", qrMetadata.height)
 
       // Validate positioning
-      const textTop = 350
-      const textLeft = 0
       const qrTop = 517
       const qrLeft = 247
 
-      console.log("Text will be placed at:", { top: textTop, left: textLeft })
-      console.log("Text bounds:", { 
-        right: textLeft + (textMetadata.width || 0), 
-        bottom: textTop + (textMetadata.height || 0) 
-      })
       console.log("QR will be placed at:", { top: qrTop, left: qrLeft })
       console.log("QR bounds:", { 
         right: qrLeft + (qrMetadata.width || 0), 
         bottom: qrTop + (qrMetadata.height || 0) 
       })
 
-      // Check if images will fit
-      if (textLeft + (textMetadata.width || 0) > templateWidth) {
-        throw new Error(`Text image (${textMetadata.width}px) exceeds template width (${templateWidth}px)`)
-      }
-      if (textTop + (textMetadata.height || 0) > templateHeight) {
-        throw new Error(`Text image position exceeds template height`)
-      }
+      // Check if QR code will fit
       if (qrLeft + (qrMetadata.width || 0) > templateWidth) {
         throw new Error(`QR code position exceeds template width`)
       }
@@ -139,11 +77,6 @@ export async function POST(req: Request) {
 
       const finalImageBuffer = await sharp(templateBuffer)
         .composite([
-          {
-            input: textBuffer,
-            top: textTop,
-            left: textLeft,
-          },
           {
             input: resizedQrBuffer,
             top: qrTop,
@@ -176,8 +109,13 @@ export async function POST(req: Request) {
 
     // --- 5. Send Email with city-specific message ---
     const transporter = nodemailer.createTransport({
-      service: "gmail",
-      auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS },
+       host: "smtp.hostinger.com",
+  port: 465,
+  secure: true,
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
+  },
     })
 
     // Define city-specific email bodies
