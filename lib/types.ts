@@ -43,8 +43,9 @@ export interface Database {
             city: string | null
             car_model: string | null // 🆕 Added here
             email_status: boolean
+            resend_status: boolean
             whatsapp_status: boolean
-            rsvp_status: boolean
+            rsvp_status: string | boolean | null
             is_attended_event: boolean
             is_game_played: boolean
             created_at: string
@@ -58,8 +59,9 @@ export interface Database {
             city: string | null
             car_model?: string | null // 🆕 Added here
             email_status?: boolean
+            resend_status?: boolean
             whatsapp_status?: boolean
-            rsvp_status?: boolean
+            rsvp_status?: string | boolean | null
             is_attended_event?: boolean
             is_game_played?: boolean
         }

@@ -45,11 +45,11 @@ export async function GET(req: Request) {
       )
     }
 
-    // Only update rsvp_status to true if response is "yes"
+    // Only update rsvp_status to "confirmed" if response is "yes"
     if (response === "yes") {
       const { error } = await supabaseAdmin
         .from("toyota_microsite_users")
-        .update({ rsvp_status: true })
+        .update({ rsvp_status: "confirmed" })
         .eq("uid", uid)
 
       if (error) {

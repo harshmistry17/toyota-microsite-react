@@ -56,11 +56,13 @@ export async function POST(req: Request) {
 
     // Send Email
     const transporter = nodemailer.createTransport({
-      service: "gmail",
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS
-      },
+        host: "smtp.hostinger.com",
+  port: 465,
+  secure: true,
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
+  },
     })
 
     const mailOptions = {
@@ -112,6 +114,30 @@ export async function POST(req: Request) {
     }
 
     await transporter.sendMail(mailOptions)
+
+    const { data: existingUser, error: existingUserError } = await supabaseAdmin
+      .from("toyota_microsite_users")
+      .select("rsvp_status")
+      .eq("uid", uid)
+      .single()
+
+    if (existingUserError) {
+      throw existingUserError
+    }
+
+    const alreadyConfirmed =
+      existingUser?.rsvp_status === "confirmed" || existingUser?.rsvp_status === true
+
+    if (!alreadyConfirmed) {
+      const { error: statusUpdateError } = await supabaseAdmin
+        .from("toyota_microsite_users")
+        .update({ rsvp_status: "sent" })
+        .eq("uid", uid)
+
+      if (statusUpdateError) {
+        throw statusUpdateError
+      }
+    }
 
     return NextResponse.json({
       success: true,

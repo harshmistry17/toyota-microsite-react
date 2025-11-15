@@ -135,7 +135,7 @@ export default function Home() {
         // --- ADDED DEFAULTS ---
         email_status: false,
         whatsapp_status: false,
-        rsvp_status: false,
+        rsvp_status: "false",
         is_attended_event: false,
         // ----------------------
       }])

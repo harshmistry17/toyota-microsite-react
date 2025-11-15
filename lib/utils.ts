@@ -65,6 +65,9 @@ export function formatTableDateTime(dateString: string | null): string {
 
 // --- MOVED FUNCTION ---
 // Helper function to process stats
+const isRsvpConfirmed = (status: UserData["rsvp_status"]) =>
+  status === "confirmed" || status === true
+
 export const calculateStats = (users: UserData[]): AdminStats => {
   const stats: AdminStats = {
     totalUsers: { count: 0, cities: {} },
@@ -79,7 +82,7 @@ export const calculateStats = (users: UserData[]): AdminStats => {
     stats.totalUsers.cities[city] = (stats.totalUsers.cities[city] || 0) + 1
 
     // RSVP users
-    if (user.rsvp_status) {
+    if (isRsvpConfirmed(user.rsvp_status)) {
       stats.totalRSVPs.count++
       stats.totalRSVPs.cities[city] = (stats.totalRSVPs.cities[city] || 0) + 1
     }
