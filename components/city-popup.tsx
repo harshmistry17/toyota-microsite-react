@@ -36,6 +36,7 @@ export default function CityPopup({ cityConfig, onClose, onPlay }: CityPopupProp
   const { city_name, venue, event_date, start_time } = cityConfig
   const { date, day } = formatDateInfo(event_date)
   const gateTime = formatTime(start_time)
+  const isVijayawada = city_name.trim().toLowerCase() === "vijayawada"
   
   // Format venue text for display
   const formattedVenue = venue ? venue.replace(/\\n/g, "\n") : "Venue TBD"
@@ -119,13 +120,26 @@ export default function CityPopup({ cityConfig, onClose, onPlay }: CityPopupProp
           <p className="text-black text-xl font-bold lowercase">@ {gateTime}</p>
         </div>
 
-        {/* Play Button */}
-       <div className="flex justify-center mb-8">
-        <button onClick={onPlay}
-          className="w-[80vw] bg-red-600 text-white py-3 sm:py-4 text-base font-semibold uppercase sm:text-lg hover:bg-red-700 transition-colors"
-        >Register Now
-        </button>
-      </div>
+        {/* Play Button or Closed Message */}
+        {isVijayawada ? (
+          <div className="flex justify-center mb-8 px-4">
+            <div className="w-full border border-red-600 bg-gray-100 px-4 py-6 text-center text-black">
+              <p className="text-2xl font-bold text-red-600">Arigato!!</p>
+              <p className="mt-3 text-base font-semibold">
+                Registrations for Vijayawada have closed. Thank you for the overwhelming response.
+              </p>
+            </div>
+          </div>
+        ) : (
+          <div className="flex justify-center mb-8">
+            <button
+              onClick={onPlay}
+              className="w-[80vw] bg-red-600 text-white py-3 sm:py-4 text-base font-semibold uppercase sm:text-lg hover:bg-red-700 transition-colors"
+            >
+              Register Now
+            </button>
+          </div>
+        )}
 
       </div>
     </div>
