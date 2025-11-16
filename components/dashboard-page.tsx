@@ -148,43 +148,58 @@ export default function DashboardPage({ initialUsers, allCities }: DashboardPage
   )
 
   // ✅ Enhanced Filter logic with search, email status, and whatsapp status
+  // DATE FILTER IMPLEMENTATION
+  // Step 1: Add state variables (after other filter states, around line 60)
+  const [startDate, setStartDate] = useState<string>("")
+  const [endDate, setEndDate] = useState<string>("")
+
+  // Step 2: Update filteredUsers logic (around line 170)
+  // FIND the filteredUsers useMemo and ADD date filter:
   const filteredUsers = useMemo(() => {
     return sortedUsers.filter((user) => {
-      // City filter
+      // Existing filters...
       const cityMatch = cityFilter === "all" || user.city === cityFilter
-      
-      // Age filter
       const ageMatch = checkAgeRange(user.birthdate, ageFilter)
-      
-      // Email status filter
       const emailMatch = emailStatusFilter === "all" || 
         (emailStatusFilter === "sent" && user.email_status) ||
         (emailStatusFilter === "not_sent" && !user.email_status)
-      
-      // Resend status filter
       const resendMatch = resendStatusFilter === "all" ||
         (resendStatusFilter === "resent" && user.resend_status) ||
         (resendStatusFilter === "not_resent" && !user.resend_status)
-      
       const normalizedRsvp = normalizeRsvpStatus(user.rsvp_status)
-      // RSVP status filter
       const rsvpMatch = rsvpStatusFilter === "all" ||
         normalizedRsvp === rsvpStatusFilter
-      
-      // WhatsApp status filter
       const whatsappMatch = whatsappStatusFilter === "all" ||
         (whatsappStatusFilter === "sent" && user.whatsapp_status) ||
         (whatsappStatusFilter === "not_sent" && !user.whatsapp_status)
-      
-      // Search filter (name, email, phone)
       const searchMatch = searchQuery === "" || 
         user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         user.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         user.mobile?.includes(searchQuery)
       
-      return cityMatch && ageMatch && emailMatch && resendMatch && rsvpMatch && whatsappMatch && searchMatch
+      // ✅ NEW: Date filter
+      const userDate = new Date(user.created_at).setHours(0, 0, 0, 0)
+      const dateMatch = 
+        (!startDate || userDate >= new Date(startDate).setHours(0, 0, 0, 0)) &&
+        (!endDate || userDate <= new Date(endDate).setHours(23, 59, 59, 999))
+      
+      return cityMatch && ageMatch && emailMatch && resendMatch && rsvpMatch && whatsappMatch && searchMatch && dateMatch
     })
-  }, [sortedUsers, cityFilter, ageFilter, emailStatusFilter, resendStatusFilter, rsvpStatusFilter, whatsappStatusFilter, searchQuery])
+  }, [sortedUsers, cityFilter, ageFilter, emailStatusFilter, resendStatusFilter, rsvpStatusFilter, whatsappStatusFilter, searchQuery, startDate, endDate])
+
+  // Step 3: Update useEffect dependencies for page reset (around line 210)
+  // FIND THIS:
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [cityFilter, ageFilter, emailStatusFilter, resendStatusFilter, rsvpStatusFilter, whatsappStatusFilter, searchQuery, entriesPerPage])
+
+  // REPLACE WITH THIS:
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [cityFilter, ageFilter, emailStatusFilter, resendStatusFilter, rsvpStatusFilter, whatsappStatusFilter, searchQuery, entriesPerPage, startDate, endDate])
+
+  // Step 4: Add date picker inputs in the UI (after the search bar, around line 455)
+  // ADD THIS after the Search Bar div:
 
   // ✅ Pagination logic
   const totalPages = Math.ceil(filteredUsers.length / entriesPerPage)
@@ -345,7 +360,7 @@ export default function DashboardPage({ initialUsers, allCities }: DashboardPage
       "UID",
       "Name",
       "Email",
-      "Phone",
+      "Mobile",
       "City",
       "Birthdate",
       "Age",
@@ -434,6 +449,7 @@ export default function DashboardPage({ initialUsers, allCities }: DashboardPage
   const totalUsers = users.length
   const totalRSVPs = users.filter((u) => normalizeRsvpStatus(u.rsvp_status) === "confirmed").length
 
+  
   // ✅ UI
   return (
     <div className="min-h-screen bg-black text-white p-6 md:p-10 font-sans">
@@ -522,7 +538,7 @@ export default function DashboardPage({ initialUsers, allCities }: DashboardPage
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
             <Input
               type="text"
-              placeholder="Search by name, email, or phone..."
+              placeholder="Search by name, email, or mobile..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-10 border-gray-400"
@@ -559,6 +575,41 @@ export default function DashboardPage({ initialUsers, allCities }: DashboardPage
               </SelectContent>
             </Select>
 
+            {/* Date Range Filter */}
+            <div className="flex flex-wrap gap-4 items-center">
+              <div className="flex items-center gap-2">
+                <label className="text-sm font-medium text-gray-700">From:</label>
+                <Input
+                  type="date"
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                  className="border-gray-400 w-[160px]"
+                />
+              </div>
+              <div className="flex items-center gap-2">
+                <label className="text-sm font-medium text-gray-700">To:</label>
+                <Input
+                  type="date"
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                  className="border-gray-400 w-[160px]"
+                />
+              </div>
+              {(startDate || endDate) && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setStartDate("")
+                    setEndDate("")
+                  }}
+                  className="border-gray-400 text-gray-700 hover:bg-gray-100"
+                >
+                  Clear Dates
+                </Button>
+              )}
+            </div>
+            
             <Select value={emailStatusFilter} onValueChange={setEmailStatusFilter}>
               <SelectTrigger className="w-[160px] border-gray-400">
                 <SelectValue placeholder="Email Status" />
@@ -690,6 +741,7 @@ export default function DashboardPage({ initialUsers, allCities }: DashboardPage
                   <TableHead>City</TableHead>
                   <TableHead>Age</TableHead>
                   <TableHead>Email</TableHead>
+                  <TableHead>Mobile</TableHead>
                   <TableHead>Email Status</TableHead>
                   <TableHead>Resend Status</TableHead>
                   <TableHead>WhatsApp</TableHead>
@@ -721,6 +773,7 @@ export default function DashboardPage({ initialUsers, allCities }: DashboardPage
                       <TableCell>{user.city}</TableCell>
                       <TableCell>{age}</TableCell>
                       <TableCell>{user.email}</TableCell>
+                      <TableCell>{user.mobile || "-"}</TableCell>
                       <TableCell>
                         {user.email_status ? (
                           <Check className="text-green-600 w-5 h-5" />
