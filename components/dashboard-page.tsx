@@ -180,7 +180,7 @@ export default function DashboardPage({ initialUsers, allCities }: DashboardPage
       const searchMatch = searchQuery === "" || 
         user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         user.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        user.phone?.includes(searchQuery)
+        user.mobile?.includes(searchQuery)
       
       return cityMatch && ageMatch && emailMatch && resendMatch && rsvpMatch && whatsappMatch && searchMatch
     })
@@ -361,7 +361,7 @@ export default function DashboardPage({ initialUsers, allCities }: DashboardPage
       user.uid,
       user.name,
       user.email || "",
-      user.phone || "",
+      user.mobile || "",
       user.city || "",
       user.birthdate || "",
       calculateAge(user.birthdate),
