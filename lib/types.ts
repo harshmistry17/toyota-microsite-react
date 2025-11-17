@@ -42,6 +42,7 @@ export interface Database {
             birthdate: string | null
             city: string | null
             car_model: string | null // 🆕 Added here
+            image_link: string | null
             email_status: boolean
             resend_status: boolean
             whatsapp_status: boolean
@@ -58,6 +59,7 @@ export interface Database {
             birthdate: string | null
             city: string | null
             car_model?: string | null // 🆕 Added here
+            image_link?: string | null
             email_status?: boolean
             resend_status?: boolean
             whatsapp_status?: boolean

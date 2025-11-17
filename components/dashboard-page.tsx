@@ -167,8 +167,10 @@ export default function DashboardPage({ initialUsers, allCities }: DashboardPage
         (resendStatusFilter === "resent" && user.resend_status) ||
         (resendStatusFilter === "not_resent" && !user.resend_status)
       const normalizedRsvp = normalizeRsvpStatus(user.rsvp_status)
-      const rsvpMatch = rsvpStatusFilter === "all" ||
-        normalizedRsvp === rsvpStatusFilter
+      const rsvpMatch =
+        rsvpStatusFilter === "all" ||
+        normalizedRsvp === rsvpStatusFilter ||
+        (rsvpStatusFilter === "sent" && normalizedRsvp === "confirmed")
       const whatsappMatch = whatsappStatusFilter === "all" ||
         (whatsappStatusFilter === "sent" && user.whatsapp_status) ||
         (whatsappStatusFilter === "not_sent" && !user.whatsapp_status)
@@ -355,37 +357,36 @@ export default function DashboardPage({ initialUsers, allCities }: DashboardPage
     // Use filtered users for export
     const dataToExport = filteredUsers.length > 0 ? filteredUsers : users
     
-    // CSV Headers
-    const headers = [
-      "UID",
-      "Name",
-      "Email",
-      "Mobile",
-      "City",
-      "Birthdate",
-      "Age",
-      "Email Status",
-      "Resend Status",
-      "WhatsApp Status",
-      "RSVP Status",
-      "Registered At"
+    const supabaseColumns = [
+      { header: "ID", value: (user: UserData) => user.id },
+      { header: "UID", value: (user: UserData) => user.uid },
+      { header: "Name", value: (user: UserData) => user.name },
+      { header: "Email", value: (user: UserData) => user.email || "" },
+      { header: "Mobile", value: (user: UserData) => user.mobile || "" },
+      { header: "Occupation", value: (user: UserData) => user.occupation || "" },
+      { header: "Birthdate", value: (user: UserData) => user.birthdate || "" },
+      { header: "City", value: (user: UserData) => user.city || "" },
+      { header: "Car Model", value: (user: UserData) => user.car_model || "" },
+      { header: "Image Link", value: (user: UserData) => user.image_link || "" },
+      { header: "Email Status", value: (user: UserData) => (user.email_status ? "Sent" : "Not Sent") },
+      { header: "Resend Status", value: (user: UserData) => (user.resend_status ? "Resent" : "Not Resent") },
+      { header: "WhatsApp Status", value: (user: UserData) => (user.whatsapp_status ? "Sent" : "Not Sent") },
+      { header: "RSVP Status", value: (user: UserData) => rsvpStatusLabels[normalizeRsvpStatus(user.rsvp_status)] },
+      { header: "Attended Event", value: (user: UserData) => (user.is_attended_event ? "Yes" : "No") },
+      { header: "Game Played", value: (user: UserData) => (user.is_game_played ? "Yes" : "No") },
+      { header: "Registered At", value: (user: UserData) => formatTableDateTime(user.created_at) },
     ]
-    
-    // CSV Rows
-    const rows = dataToExport.map(user => [
-      user.uid,
-      user.name,
-      user.email || "",
-      user.mobile || "",
-      user.city || "",
-      user.birthdate || "",
-      calculateAge(user.birthdate),
-      user.email_status ? "Sent" : "Not Sent",
-      user.resend_status ? "Resent" : "Not Resent",
-      user.whatsapp_status ? "Sent" : "Not Sent",
-      rsvpStatusLabels[normalizeRsvpStatus(user.rsvp_status)],
-      formatTableDateTime(user.created_at)
-    ])
+
+    const derivedColumns = [
+      { header: "Age", value: (user: UserData) => calculateAge(user.birthdate) ?? "" },
+    ]
+
+    const exportColumns = [...supabaseColumns, ...derivedColumns]
+    const headers = exportColumns.map((col) => col.header)
+
+    const rows = dataToExport.map((user) =>
+      exportColumns.map((col) => col.value(user))
+    )
     
     // Combine headers and rows
     const csvContent = [
@@ -509,7 +510,7 @@ export default function DashboardPage({ initialUsers, allCities }: DashboardPage
         <Card className="bg-white text-black border border-gray-300 shadow-md">
           <CardHeader className="flex items-center gap-2">
             <Ticket className="text-green-600 w-6 h-6" />
-            <CardTitle className="text-xl font-semibold">Total RSVPs</CardTitle>
+            <CardTitle className="text-xl font-semibold">Total RSVPs Confirmed</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-4xl font-bold mb-4 text-green-700">{totalRSVPs}</div>
