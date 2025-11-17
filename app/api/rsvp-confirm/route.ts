@@ -45,7 +45,7 @@ export async function GET(req: Request) {
       )
     }
 
-    // Only update rsvp_status to "confirmed" if response is "yes"
+    // Persist RSVP decision in Supabase
     if (response === "yes") {
       const { error } = await supabaseAdmin
         .from("toyota_microsite_users")
@@ -148,7 +148,50 @@ export async function GET(req: Request) {
         { status: 200, headers: { "Content-Type": "text/html" } }
       )
     } else if (response === "no") {
-      // User declined - we don't update rsvp_status
+      const { error } = await supabaseAdmin
+        .from("toyota_microsite_users")
+        .update({ rsvp_status: "rejected" })
+        .eq("uid", uid)
+
+      if (error) {
+        console.error("Database update error:", error)
+        return new NextResponse(
+          `
+          <html>
+            <head>
+              <title>Error</title>
+              <style>
+                body {
+                  font-family: Arial, sans-serif;
+                  display: flex;
+                  justify-content: center;
+                  align-items: center;
+                  min-height: 100vh;
+                  margin: 0;
+                  background-color: #f5f5f5;
+                }
+                .container {
+                  text-align: center;
+                  padding: 40px;
+                  background: white;
+                  border-radius: 10px;
+                  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+                }
+                h1 { color: #dc3545; }
+              </style>
+            </head>
+            <body>
+              <div class="container">
+                <h1>Error</h1>
+                <p>Failed to update your RSVP status. Please try again later.</p>
+              </div>
+            </body>
+          </html>
+          `,
+          { status: 500, headers: { "Content-Type": "text/html" } }
+        )
+      }
+
       return new NextResponse(
         `
         <html>

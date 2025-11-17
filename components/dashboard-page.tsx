@@ -49,10 +49,11 @@ interface DashboardPageProps {
   stats: AdminStats
 }
 
-type NormalizedRsvpStatus = "not_sent" | "sent" | "confirmed"
+type NormalizedRsvpStatus = "not_sent" | "sent" | "confirmed" | "rejected"
 
 const normalizeRsvpStatus = (status: UserData["rsvp_status"]): NormalizedRsvpStatus => {
   if (status === "confirmed" || status === true) return "confirmed"
+  if (status === "rejected") return "rejected"
   if (status === "sent") return "sent"
   return "not_sent"
 }
@@ -61,12 +62,14 @@ const rsvpStatusLabels: Record<NormalizedRsvpStatus, string> = {
   not_sent: "Not Sent",
   sent: "Sent",
   confirmed: "Confirmed",
+  rejected: "Rejected",
 }
 
 const rsvpBadgeClasses: Record<NormalizedRsvpStatus, string> = {
   not_sent: "bg-yellow-100 text-yellow-700",
   sent: "bg-blue-100 text-blue-700",
   confirmed: "bg-green-100 text-green-700",
+  rejected: "bg-red-100 text-red-700",
 }
 
 export default function DashboardPage({ initialUsers, allCities }: DashboardPageProps) {
@@ -640,13 +643,14 @@ export default function DashboardPage({ initialUsers, allCities }: DashboardPage
               <SelectTrigger className="w-[160px] border-gray-400">
                 <SelectValue placeholder="RSVP Status" />
               </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All (RSVP)</SelectItem>
-                <SelectItem value="not_sent">Not Sent</SelectItem>
-                <SelectItem value="sent">Sent</SelectItem>
-                <SelectItem value="confirmed">Confirmed</SelectItem>
-              </SelectContent>
-            </Select>
+                <SelectContent>
+                  <SelectItem value="all">All (RSVP)</SelectItem>
+                  <SelectItem value="not_sent">Not Sent</SelectItem>
+                  <SelectItem value="sent">Sent</SelectItem>
+                  <SelectItem value="confirmed">Confirmed</SelectItem>
+                  <SelectItem value="rejected">Rejected</SelectItem>
+                </SelectContent>
+              </Select>
 
             <Select value={whatsappStatusFilter} onValueChange={setWhatsappStatusFilter}>
               <SelectTrigger className="w-[160px] border-gray-400">
