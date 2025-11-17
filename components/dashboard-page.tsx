@@ -156,6 +156,7 @@ export default function DashboardPage({ initialUsers, allCities }: DashboardPage
   // Step 2: Update filteredUsers logic (around line 170)
   // FIND the filteredUsers useMemo and ADD date filter:
   const filteredUsers = useMemo(() => {
+    const normalizedSearch = searchQuery.toLowerCase()
     return sortedUsers.filter((user) => {
       // Existing filters...
       const cityMatch = cityFilter === "all" || user.city === cityFilter
@@ -175,9 +176,11 @@ export default function DashboardPage({ initialUsers, allCities }: DashboardPage
         (whatsappStatusFilter === "sent" && user.whatsapp_status) ||
         (whatsappStatusFilter === "not_sent" && !user.whatsapp_status)
       const searchMatch = searchQuery === "" || 
-        user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        user.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        user.mobile?.includes(searchQuery)
+        user.name.toLowerCase().includes(normalizedSearch) ||
+        user.email?.toLowerCase().includes(normalizedSearch) ||
+        user.mobile?.includes(searchQuery) ||
+        user.car_model?.toLowerCase().includes(normalizedSearch) ||
+        user.occupation?.toLowerCase().includes(normalizedSearch)
       
       // ✅ NEW: Date filter
       const userDate = new Date(user.created_at).setHours(0, 0, 0, 0)
@@ -740,6 +743,8 @@ export default function DashboardPage({ initialUsers, allCities }: DashboardPage
                   <TableHead>#</TableHead>
                   <TableHead>Name</TableHead>
                   <TableHead>City</TableHead>
+                  <TableHead>Car Model</TableHead>
+                  <TableHead>Occupation</TableHead>
                   <TableHead>Age</TableHead>
                   <TableHead>Email</TableHead>
                   <TableHead>Mobile</TableHead>
@@ -772,6 +777,8 @@ export default function DashboardPage({ initialUsers, allCities }: DashboardPage
                       <TableCell>{(currentPage - 1) * entriesPerPage + index + 1}</TableCell>
                       <TableCell className="font-medium">{user.name}</TableCell>
                       <TableCell>{user.city}</TableCell>
+                      <TableCell>{user.car_model || "-"}</TableCell>
+                      <TableCell>{user.occupation || "-"}</TableCell>
                       <TableCell>{age}</TableCell>
                       <TableCell>{user.email}</TableCell>
                       <TableCell>{user.mobile || "-"}</TableCell>
