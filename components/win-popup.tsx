@@ -58,18 +58,30 @@ export default function WinPopup({ registrationData, gameResults, onFinish, onCl
         </div>
 
         {/* Success Message */}
-        <div className="text-center">
-          <h1 className="text-4xl font-bold mb-4">
-            Arigato <br /> (Thankyou !!!!)
-          </h1>
-          <p className="text-black text-md mb-8 font-semibold">
+        <div className="text-center px-4">
+          {/* Welcome Section with User Name */}
+          <div className="mb-8 py-6 bg-gradient-to-r from-yellow-400 via-amber-500 to-yellow-400 rounded-lg shadow-lg">
+            <h2 className="text-2xl sm:text-3xl font-bold text-black mb-2 uppercase tracking-wide">
+              Welcome
+            </h2>
+            <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold text-white mb-2 drop-shadow-lg break-words px-2">
+              {registrationData?.name || 'Guest'}
+            </h1>
+          </div>
+
+          {/* Thank You Message */}
+          <h2 className="text-3xl sm:text-4xl font-bold mb-4 text-black">
+            Arigato <br /> <span className="text-2xl">(Thank you!)</span>
+          </h2>
+
+          <p className="text-black text-base sm:text-lg mb-8 font-semibold leading-relaxed">
             Your registration has been <br /> successfully completed. <br />Check your email/whatsapp <br /> for your buddy pass.
           </p>
 
           {/* CTA Button */}
           <button
             onClick={onFinish}
-            className="w-[288px] mx-[10px] bg-red-600 mb-6 text-white text-base font-semibold py-3 uppercase sm:text-lg hover:bg-red-700 transition-colors"
+            className="w-[288px] mx-[10px] bg-red-600 mb-6 text-white text-base font-semibold py-3 uppercase sm:text-lg hover:bg-red-700 transition-colors shadow-lg"
           >
             FINISH
           </button>

@@ -38,7 +38,7 @@ export default function QRScannerPage() {
         scannerRef.current = scanner
 
         await scanner.start(
-          { facingMode: "environment" },
+          { facingMode: "user" }, // Front camera (user-facing)
           {
             fps: 30, // Increased FPS for faster scanning
             qrbox: 280, // Single camera with slightly larger box
