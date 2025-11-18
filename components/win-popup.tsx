@@ -37,32 +37,10 @@ export default function WinPopup({ registrationData, gameResults, onFinish, onCl
     }
     storage.saveUser(userData)
 
-    fetch("/api/generate-ticket", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        uid: registrationData.uid,
-        name: registrationData.name,
-        email: registrationData.email,
-        city: registrationData.city,
-      }),
-    })
-      .then(res => res.json())
-      .then(data => {
-
-        console.log("API Response:", data);
-
-        console.log(data.success);
-        if (data.success) {
-          console.log("Successfully generated ticket and sent email.")
-        } else {
-          console.error("Failed to generate ticket/send email:", data.message)
-        }
-      })
-      .catch(error => {
-        console.error("Error calling /api/generate-ticket:", error)
-      })
-  }, [registrationData])
+    // Ticket generation and email sending has been moved to registration phase
+    // No need to call /api/generate-ticket here anymore
+    console.log("Game completed. Ticket was already generated during registration.")
+  }, [registrationData, gameResults])
 
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50 px-4 bg-black/90">

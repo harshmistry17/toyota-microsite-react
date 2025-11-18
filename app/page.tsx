@@ -153,19 +153,44 @@ export default function Home() {
     // 2. Save data and move to next page
     if (newUser) {
       setCreatedUserUID(newUser.uid); // Save the UID (still useful for handleGamesComplete)
-      
+
       // Create the complete data object including the new UID
       const completeData: RegistrationData = {
         ...data,
         uid: newUser.uid
       };
-      
+
       setRegistrationData(completeData); // <-- SET THE COMPLETE OBJECT (WITH UID)
+
+      // 3. Generate ticket and send email in background (non-blocking)
+      // Fire and forget - don't wait for the response
+      fetch("/api/generate-ticket", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          uid: newUser.uid,
+          name: data.name,
+          email: data.email,
+          city: data.city,
+        }),
+      })
+        .then(res => res.json())
+        .then(ticketData => {
+          if (ticketData.success) {
+            console.log("Successfully generated ticket and sent email on registration.");
+          } else {
+            console.error("Failed to generate ticket/send email:", ticketData.message);
+          }
+        })
+        .catch(error => {
+          console.error("Error calling /api/generate-ticket:", error);
+        });
     } else {
       console.error("No user data returned from Supabase after insert.");
       return;
     }
 
+    // Navigate to games page immediately without waiting for ticket generation
     // --- FIX: Implement Vijayawada skip logic ---
     // if (selectedCityConfig?.city_name === "Vijayawada") {
     //   setCurrentPage("win"); // Skip to WinPopup
