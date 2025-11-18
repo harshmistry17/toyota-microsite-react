@@ -100,21 +100,30 @@ export default function QRScannerPage() {
           message: "Invalid QR Code. User not found.",
         })
       } else {
-        // Update is_attended_event to true
-        const { error: updateError } = await supabase
-          .from("toyota_microsite_users")
-          .update({ is_attended_event: true })
-          .eq("uid", uid)
+        // Check if user has already been marked as attended
+        if (data.is_attended_event) {
+          setNotification({
+            type: "error",
+            message: "Already Registered!",
+            userName: `${data.name} has already checked in.`,
+          })
+        } else {
+          // Update is_attended_event to true
+          const { error: updateError } = await supabase
+            .from("toyota_microsite_users")
+            .update({ is_attended_event: true })
+            .eq("uid", uid)
 
-        if (updateError) {
-          console.error("Error updating attendance:", updateError)
+          if (updateError) {
+            console.error("Error updating attendance:", updateError)
+          }
+
+          setNotification({
+            type: "success",
+            message: "Welcome!",
+            userName: data.name,
+          })
         }
-
-        setNotification({
-          type: "success",
-          message: "Welcome!",
-          userName: data.name,
-        })
       }
 
       // Auto-hide notification after 3 seconds
