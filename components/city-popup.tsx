@@ -36,7 +36,8 @@ export default function CityPopup({ cityConfig, onClose, onPlay }: CityPopupProp
   const { city_name, venue, event_date, start_time } = cityConfig
   const { date, day } = formatDateInfo(event_date)
   const gateTime = formatTime(start_time)
-  const isVijayawada = city_name.trim().toLowerCase() === "vijayawada"
+  const normalizedCity = city_name.trim().toLowerCase()
+  const isRegistrationClosed = ["vijayawada", "chennai"].includes(normalizedCity)
   
   // Format venue text for display
   const formattedVenue = venue ? venue.replace(/\\n/g, "\n") : "Venue TBD"
@@ -121,12 +122,12 @@ export default function CityPopup({ cityConfig, onClose, onPlay }: CityPopupProp
         </div>
 
         {/* Play Button or Closed Message */}
-        {isVijayawada ? (
+        {isRegistrationClosed ? (
           <div className="flex justify-center mb-8 px-4">
             <div className="w-full border border-red-600 bg-gray-100 px-4 py-6 text-center text-black">
               <p className="text-2xl font-bold text-red-600">Arigato!!</p>
               <p className="mt-3 text-base font-semibold">
-                Registrations for Vijayawada have closed. Thank you for the overwhelming response.
+                Registrations for {city_name} have closed. Thank you for the overwhelming response.
               </p>
             </div>
           </div>
