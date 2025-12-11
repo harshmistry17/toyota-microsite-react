@@ -37,7 +37,7 @@ export default function CityPopup({ cityConfig, onClose, onPlay }: CityPopupProp
   const { date, day } = formatDateInfo(event_date)
   const gateTime = formatTime(start_time)
   const normalizedCity = city_name.trim().toLowerCase()
-  const isRegistrationClosed = ["vijayawada", "chennai"].includes(normalizedCity)
+  const isRegistrationClosed = ["vijayawada"].includes(normalizedCity)
   
   // Format venue text for display
   const formattedVenue = venue ? venue.replace(/\\n/g, "\n") : "Venue TBD"
