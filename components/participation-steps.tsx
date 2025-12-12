@@ -1,6 +1,6 @@
 export default function ParticipationSteps() {
   const steps = [
-    { number: 1, title: "Choose your city", color: "text-white" },
+    { number: 1, title: "Click the city icon below", color: "text-white" },
     { number: 2, title: "Fill out the registration form", color: "text-white" },
     { number: 3, title: "Let's start the quiz fun!", color: "text-white" },
     { number: 4, title: "Check your email / Whatsapp for entry pass (QR Code)", color: "text-white" },
@@ -30,7 +30,7 @@ export default function ParticipationSteps() {
 </div>
 
       <p className="text-center text-2xl sm:text-xl font-bold mt-8 ">
-        To continue, please
+        To continue, please{" "}
         <br className="sm:hidden" />
         select your city
       </p>

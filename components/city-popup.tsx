@@ -37,7 +37,7 @@ export default function CityPopup({ cityConfig, onClose, onPlay }: CityPopupProp
   const { date, day } = formatDateInfo(event_date)
   const gateTime = formatTime(start_time)
   const normalizedCity = city_name.trim().toLowerCase()
-  const isRegistrationClosed = ["vijayawada"].includes(normalizedCity)
+  const isRegistrationClosed = ["vijayawada", "chennai"].includes(normalizedCity)
   
   // Format venue text for display
   const formattedVenue = venue ? venue.replace(/\\n/g, "\n") : "Venue TBD"
@@ -96,8 +96,8 @@ export default function CityPopup({ cityConfig, onClose, onPlay }: CityPopupProp
 
         {/* Date Info */}
         <div className="text-center mb-3">
-          <p className="text-black font-semibold text-lg sm:text-base">{date}</p>
-          <p className="text-black font-semibold text-lg sm:text-base">{day}</p>
+          <p className="text-black font-bold text-lg sm:text-base">{date}</p>
+          <p className="text-black font-bold text-lg sm:text-base">{day}</p>
         </div>
 
         {/* Venue */}
@@ -117,8 +117,8 @@ export default function CityPopup({ cityConfig, onClose, onPlay }: CityPopupProp
 
         {/* Gates Open Time */}
         <div className="text-center mb-6">
-          <p className="text-black font-bold text-xl">Show begins</p>
-          <p className="text-black text-xl font-bold lowercase">@ {gateTime}</p>
+          <p className="text-black font-bold text-xl">Gates Open Time</p>
+          <p className="text-black text-xl font-bold lowercase">{gateTime} onwards</p>
         </div>
 
         {/* Play Button or Closed Message */}
@@ -137,7 +137,7 @@ export default function CityPopup({ cityConfig, onClose, onPlay }: CityPopupProp
               onClick={onPlay}
               className="w-[80vw] bg-red-600 text-white py-3 sm:py-4 text-base font-semibold uppercase sm:text-lg hover:bg-red-700 transition-colors"
             >
-              Register Now
+              PLAY. WIN. EXPERIENCE
             </button>
           </div>
         )}
