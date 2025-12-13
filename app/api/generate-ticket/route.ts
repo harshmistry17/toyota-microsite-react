@@ -51,7 +51,7 @@ export async function POST(req: Request) {
       
       // Resize and prepare QR code
       const resizedQrBuffer = await sharp(qrCodeBuffer)
-        .resize({ width: 200, height: 200 })
+        .resize({ width: 180, height: 180 })
         .toBuffer()
       
       const qrMetadata = await sharp(resizedQrBuffer).metadata()
@@ -159,6 +159,31 @@ export async function POST(req: Request) {
           </div>
           <p style="font-size: 16px; margin-top: 20px;">
             Warm Regards,
+          </p>
+        </div>
+      `
+    } else if (normalizedCity === "bengaluru") {
+      emailBody = `
+        <div style="font-family: Arial, sans-serif; padding: 20px; text-align: left; color: #333;">
+          <h1 style="color: #000;">Hi ${name},</h1>
+          <p style="font-size: 16px; line-height: 1.5;">
+            Congratulations on winning your buddy pass.<br><br>
+            We will be sharing an RSVP mail on 19th December, to confirm your attendance.
+          </p>
+          <div style="margin: 20px 0;">
+            <img
+              src="${publicImageUrl}"
+              alt="Your Event Ticket"
+              style="max-width: 100%; height: auto; border-radius: 8px;"
+            />
+          </div>
+          <p style="font-size: 16px; margin-top: 20px;">
+            Warm regards,<br/>
+            Team Toyota
+          </p>
+          <p style="font-size: 12px; color: #666; margin-top: 20px;">
+            *Conditions apply<br/>
+            <strong>Admission will be granted on a first-come, first-served basis, subject to capacity.</strong>
           </p>
         </div>
       `

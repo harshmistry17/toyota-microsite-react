@@ -66,10 +66,10 @@ export default function WinPopup({ registrationData, gameResults, onFinish, onCl
             Arigato <br /> <span className="text-2xl">(Thank you!!!)</span>
           </h2>
 
-          <p className="text-black text-base sm:text-lg mb-8 font-semibold leading-relaxed">
+          <p className="text-black text-base sm:text-xl mb-8 font-semibold leading-relaxed">
             Your registration has been <br /> successfully completed. 
           </p>
-<p className="text-black text-base sm:text-lg mb-8 font-bold leading-relaxed">Check your mail (Inbox and Spam folder) / WhatsApp for the buddy passes</p>
+<p className="text-black text-base sm:text-xl mb-8 font-bold leading-relaxed">Check your mail (Inbox and Spam folder) / WhatsApp for the buddy passes</p>
           {/* CTA Button */}
           <button
             onClick={onFinish}
