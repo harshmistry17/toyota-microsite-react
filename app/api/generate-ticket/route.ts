@@ -58,7 +58,7 @@ export async function POST(req: Request) {
       console.log("QR code dimensions:", qrMetadata.width, "x", qrMetadata.height)
 
       // Validate positioning
-      const qrTop = 517
+      const qrTop = 680
       const qrLeft = 247
 
       console.log("QR will be placed at:", { top: qrTop, left: qrLeft })

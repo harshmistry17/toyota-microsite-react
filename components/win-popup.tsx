@@ -59,25 +59,17 @@ export default function WinPopup({ registrationData, gameResults, onFinish, onCl
 
         {/* Success Message */}
         <div className="text-center px-4">
-          {/* Welcome Section with User Name */}
-          <div className="mb-8 py-6 bg-gradient-to-r from-yellow-400 via-amber-500 to-yellow-400 rounded-lg shadow-lg">
-            <h2 className="text-2xl sm:text-3xl font-bold text-black mb-2 uppercase tracking-wide">
-              Welcome
-            </h2>
-            <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold text-white mb-2 drop-shadow-lg break-words px-2">
-              {registrationData?.name || 'Guest'}
-            </h1>
-          </div>
+          
 
           {/* Thank You Message */}
           <h2 className="text-3xl sm:text-4xl font-bold mb-4 text-black">
-            Arigato <br /> <span className="text-2xl">(Thank you!)</span>
+            Arigato <br /> <span className="text-2xl">(Thank you!!!)</span>
           </h2>
 
           <p className="text-black text-base sm:text-lg mb-8 font-semibold leading-relaxed">
-            Your registration has been <br /> successfully completed. <br />Check your email/whatsapp <br /> for your buddy pass.
+            Your registration has been <br /> successfully completed. 
           </p>
-
+<p className="text-black text-base sm:text-lg mb-8 font-bold leading-relaxed">Check your mail (Inbox and Spam folder) / WhatsApp for the buddy passes</p>
           {/* CTA Button */}
           <button
             onClick={onFinish}
