@@ -38,7 +38,7 @@ export default function TermsConditionsPage({ onBack }: TermsConditionsPageProps
             <p className="leading-relaxed  text-sm">
               Entry is permitted only with a valid QR code or ticket issued by the organizers. Each QR code/ticket
               admits the number of persons specified on it. Attendees must carry a valid government-issued photo ID for
-              verification. <br /><span className="font-bold">Admission will be granted on a first-come, first-served basis, subject to capacity</span>
+              verification. <span className="font-bold">Admission will be granted on a first-come, first-served basis, subject to capacity</span>
             </p>
           </section>
 
