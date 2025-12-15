@@ -127,12 +127,26 @@ export default function RegistrationPage({
               name="dob"
               value={formData.dob}
               onChange={handleChange}
+              onKeyDown={(e) => e.preventDefault()} // Prevent keyboard input
               max={new Date().toISOString().split("T")[0]} // prevent future dates
               style={{ backgroundColor: '#222222', fontSize: '18px' }}
-              className="w-full px-4 py-3 text-white focus:outline-none focus:border-red-500 bg-[#222222] text-[18px] appearance-none"
+              className="w-full px-4 py-6 text-white focus:outline-none focus:border-red-500 bg-[#222222] text-[18px] appearance-none"
+              readOnly
+              onFocus={(e) => {
+                e.target.readOnly = false
+                e.target.showPicker?.()
+              }}
+              onBlur={(e) => {
+                e.target.readOnly = true
+              }}
             />
 
-            
+            {/* Fake placeholder only when no date is selected */}
+            {!formData.dob && (
+              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-white text-lg pointer-events-none">
+                Birth Date
+              </span>
+            )}
 
             {/* Custom calendar icon */}
             <div className="absolute top-1/2 right-3 -translate-y-1/2 pointer-events-none">
@@ -155,24 +169,26 @@ export default function RegistrationPage({
     input[type="date"]::-moz-calendar-picker-indicator {
       display: none;
     }
-    /* Hide the native placeholder text (dd/mm/yyyy) */
+    /* Completely hide the native placeholder text (dd/mm/yyyy) */
     input[type="date"]::-webkit-datetime-edit-text,
     input[type="date"]::-webkit-datetime-edit-month-field,
     input[type="date"]::-webkit-datetime-edit-day-field,
     input[type="date"]::-webkit-datetime-edit-year-field {
-      color: transparent;
+      display: none;
     }
     /* Show date values in white when a date is selected */
-    input[type="date"]:not(:placeholder-shown)::-webkit-datetime-edit-text,
-    input[type="date"]:not(:placeholder-shown)::-webkit-datetime-edit-month-field,
-    input[type="date"]:not(:placeholder-shown)::-webkit-datetime-edit-day-field,
-    input[type="date"]:not(:placeholder-shown)::-webkit-datetime-edit-year-field {
+    input[type="date"]:focus::-webkit-datetime-edit-text,
+    input[type="date"]:focus::-webkit-datetime-edit-month-field,
+    input[type="date"]:focus::-webkit-datetime-edit-day-field,
+    input[type="date"]:focus::-webkit-datetime-edit-year-field {
+      display: inline;
       color: white;
     }
     input[type="date"][value]:not([value=""])::-webkit-datetime-edit-text,
     input[type="date"][value]:not([value=""])::-webkit-datetime-edit-month-field,
     input[type="date"][value]:not([value=""])::-webkit-datetime-edit-day-field,
     input[type="date"][value]:not([value=""])::-webkit-datetime-edit-year-field {
+      display: inline;
       color: white;
     }
   `}</style>
