@@ -52,15 +52,15 @@ export async function POST(req: Request) {
       
       // Resize and prepare QR code
       const resizedQrBuffer = await sharp(qrCodeBuffer)
-        .resize({ width: 180, height: 180 })
+        .resize({ width: 230, height: 230 })
         .toBuffer()
       
       const qrMetadata = await sharp(resizedQrBuffer).metadata()
       console.log("QR code dimensions:", qrMetadata.width, "x", qrMetadata.height)
 
       // Validate positioning
-      const qrTop = 680
-      const qrLeft = 247
+      const qrTop = 650
+      const qrLeft = 227
 
       console.log("QR will be placed at:", { top: qrTop, left: qrLeft })
       console.log("QR bounds:", { 
