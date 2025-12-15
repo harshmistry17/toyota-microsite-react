@@ -137,7 +137,7 @@ export default function CityPopup({ cityConfig, onClose, onPlay }: CityPopupProp
               onClick={onPlay}
               className="w-[80vw] bg-red-600 text-white py-3 sm:py-4 text-base font-semibold uppercase sm:text-lg hover:bg-red-700 transition-colors"
             >
-              PLAY. WIN. EXPERIENCE
+              REGISTER & WIN PASSES
             </button>
           </div>
         )}
