@@ -43,8 +43,8 @@ export default function CityPopup({ cityConfig, onClose, onPlay }: CityPopupProp
   const formattedVenue = venue ? venue.replace(/\\n/g, "\n") : "Venue TBD"
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center z-50 px-4 bg-black/70">
-      <div className="bg-white sm:p-8 max-w-md w-full border border-gray-800 shadow-2xl relative">
+    <div className="fixed inset-0 flex items-center justify-center z-50 px-4 bg-black/70 overflow-y-auto py-4">
+      <div className="bg-white sm:p-8 max-w-md w-full border border-gray-800 shadow-2xl relative my-auto max-h-[95vh] overflow-y-auto">
 
         {/* Image Section with Close Button */}
         <div className="relative mb-6">
