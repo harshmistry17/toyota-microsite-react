@@ -4,6 +4,7 @@ import qrcode from "qrcode"
 import sharp from "sharp"
 import path from "path"
 import { supabaseAdmin } from "@/lib/supabase/server"
+import { sendRegistrationWhatsApp } from "@/lib/wati"
 
 async function getTemplateBuffer() {
   const templatePath = path.join(process.cwd(), "public", "placeholder", "email-placeholder.png")
@@ -17,9 +18,9 @@ async function getTemplateBuffer() {
 
 export async function POST(req: Request) {
   try {
-    const { uid, name, email, city } = await req.json()
+    const { uid, name, email, city, mobile } = await req.json()
 
-    console.log("Received request:", { uid, name, email, city })
+    console.log("Received request:", { uid, name, email, city, mobile })
 
     if (!uid || !name || !email || !city) {
       return NextResponse.json(
@@ -220,21 +221,45 @@ export async function POST(req: Request) {
       html: emailBody,
     }
 
-    // --- 6. Send email and update database concurrently ---
-    // Use Promise.all to ensure both async operations complete before responding.
+    // --- 6. Send email, WhatsApp, and update database concurrently ---
+    // Use Promise.all to ensure all async operations complete before responding.
     // This is crucial in serverless environments which may terminate execution after a response is sent.
-    const [emailResult, dbResult] = await Promise.all([
+    const [emailResult, dbResult, whatsappResult] = await Promise.all([
       transporter.sendMail(mailOptions),
       supabaseAdmin
         .from("toyota_microsite_users")
         .update({ image_link: publicImageUrl, email_status: true })
         .eq("uid", uid),
+      // Send WhatsApp message if mobile number is provided
+      // Pass the ticket image URL to the WhatsApp template
+      mobile ? sendRegistrationWhatsApp(name, mobile, publicImageUrl) : Promise.resolve({ success: false, error: "No mobile number provided" })
     ])
-    
+
     console.log("Email sent successfully to:", email)
     if (dbResult.error) console.error("Supabase DB update error:", dbResult.error)
-    
-    return NextResponse.json({ success: true, message: "Ticket generated and email sent!" })
+
+    // Log WhatsApp result
+    if (whatsappResult.success) {
+      console.log("WhatsApp message sent successfully to:", mobile)
+      // Update whatsapp_status in database (non-blocking)
+      supabaseAdmin
+        .from("toyota_microsite_users")
+        .update({ whatsapp_status: true })
+        .eq("uid", uid)
+        .then(({ error: whatsappUpdateError }) => {
+          if (whatsappUpdateError) {
+            console.error("Failed to update whatsapp_status:", whatsappUpdateError)
+          }
+        })
+    } else {
+      console.error("WhatsApp send failed:", whatsappResult.error)
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: "Ticket generated and email sent!",
+      whatsapp_sent: whatsappResult.success
+    })
   } catch (error) {
     console.error("Full error in /api/generate-ticket:", error)
     return NextResponse.json(

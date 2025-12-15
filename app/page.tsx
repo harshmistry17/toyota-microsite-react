@@ -162,7 +162,7 @@ export default function Home() {
 
       setRegistrationData(completeData); // <-- SET THE COMPLETE OBJECT (WITH UID)
 
-      // 3. Generate ticket and send email in background (non-blocking)
+      // 3. Generate ticket and send email & WhatsApp in background (non-blocking)
       // Fire and forget - don't wait for the response
       fetch("/api/generate-ticket", {
         method: "POST",
@@ -172,6 +172,7 @@ export default function Home() {
           name: data.name,
           email: data.email,
           city: data.city,
+          mobile: data.mobile,
         }),
       })
         .then(res => res.json())
