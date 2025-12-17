@@ -1,7 +1,5 @@
 export interface UserGameResult {
   quiz: Record<string, boolean> // question index -> is correct
-  twoTruths: Record<string, boolean>
-  instruments: string[] // selected instrument ids
 }
 
 export interface UserData {

@@ -2,8 +2,6 @@
 
 import { useState, useEffect } from "react"
 import QuizAccordion from "@/components/game-accordion/quiz-accordion"
-import TwoTruthsAccordion from "@/components/game-accordion/two-truths-accordion"
-import InstrumentsAccordion from "@/components/game-accordion/instruments-accordion"
 import type { RegistrationData } from "@/app/page"
 import type { UserGameResult } from "@/lib/storage"
 
@@ -15,32 +13,20 @@ interface GamesPageProps {
 export default function GamesPage({ registrationData, onComplete }: GamesPageProps) {
   const [gameResults, setGameResults] = useState<UserGameResult>({
     quiz: {},
-    twoTruths: {},
-    instruments: [],
   })
 
   const isQuizDone = Object.keys(gameResults.quiz).length > 0
-  const isTwoTruthsDone = Object.keys(gameResults.twoTruths).length > 0
-  const isInstrumentsDone = gameResults.instruments.length > 0
 
   useEffect(() => {
-    if (isQuizDone && isTwoTruthsDone && isInstrumentsDone) {
+    if (isQuizDone) {
       setTimeout(() => {
         onComplete(gameResults)
       }, 1000)
     }
-  }, [isQuizDone, isTwoTruthsDone, isInstrumentsDone, gameResults, onComplete])
+  }, [isQuizDone, gameResults, onComplete])
 
   const handleQuizComplete = (results: Record<number, boolean>) => {
     setGameResults((prev) => ({ ...prev, quiz: results }))
-  }
-
-  const handleTwoTruthsComplete = (results: Record<number, boolean>) => {
-    setGameResults((prev) => ({ ...prev, twoTruths: results }))
-  }
-
-  const handleInstrumentsComplete = (results: string[]) => {
-    setGameResults((prev) => ({ ...prev, instruments: results }))
   }
 
   return (
@@ -62,23 +48,6 @@ export default function GamesPage({ registrationData, onComplete }: GamesPagePro
             completed={isQuizDone}
             disabled={false}
           />
-          <TwoTruthsAccordion
-            onComplete={handleTwoTruthsComplete}
-            completed={isTwoTruthsDone}
-            disabled={!isQuizDone}
-          />
-          <InstrumentsAccordion
-            onComplete={handleInstrumentsComplete}
-            completed={isInstrumentsDone}
-            disabled={!isTwoTruthsDone}
-          />
-        </div>
-
-        {/* Progress Indicator */}
-        <div className="mt-12 flex justify-between text-sm text-gray-400">
-          <span className={isQuizDone ? "text-green-400" : ""}>Quiz {isQuizDone ? "✓" : "○"}</span>
-          <span className={isTwoTruthsDone ? "text-green-400" : ""}>Two Truths {isTwoTruthsDone ? "✓" : "○"}</span>
-          <span className={isInstrumentsDone ? "text-green-400" : ""}>Instruments {isInstrumentsDone ? "✓" : "○"}</span>
         </div>
       </div>
     </div>
