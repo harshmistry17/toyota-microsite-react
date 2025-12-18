@@ -77,12 +77,12 @@ export async function POST(req: Request) {
           </p>
 
           <p style="font-size: 16px; line-height: 1.6;">
-            We're excited to have you join us for <strong>TOYOTA PRESENTS DRUM TAO</strong> on
+            We're thrilled to have you join us for <strong>TOYOTA Presents DRUM TAO</strong> on
             <strong>${eventDate}</strong> at <strong>${cityConfig.venue || "TBA"}</strong>.
           </p>
 
           <p style="font-size: 16px; line-height: 1.6;">
-            Kindly confirm your attendance by clicking one of the buttons below:
+            Please confirm your attendance by clicking the RSVP link below: 👉
           </p>
 
           <div style="text-align: left; margin: 30px 0;">
@@ -101,8 +101,30 @@ export async function POST(req: Request) {
             </a>
           </div>
 
-          <p style="font-size: 14px; line-height: 1.6; color: #666; margin-top: 30px;">
-            We look forward to seeing you at the event!
+          <p style="font-size: 14px; line-height: 1.6; color: #dc3545; font-weight: bold; margin-top: 20px;">
+            *Please note: As entries are limited, failing to respond to the RSVP may result in losing your spot at the event.
+          </p>
+
+          <div style="margin-top: 25px;">
+            <p style="font-size: 16px; font-weight: bold; margin-bottom: 10px;">Important Information:</p>
+            <ul style="font-size: 14px; line-height: 1.8; padding-left: 20px;">
+              <li>Each QR code grants entry for 2 people.</li>
+              <li>Visit the Box Office to collect your wristbands.</li>
+            </ul>
+          </div>
+
+          <div style="margin-top: 20px; padding: 15px; background-color: #fff3cd; border-left: 4px solid #ffc107;">
+            <p style="font-size: 14px; line-height: 1.6; margin: 0;">
+              ⚠️ <strong>Do not share your QR code.</strong> Once scanned, it becomes invalid, and entry will be granted only to the first person who uses it.
+              We are not responsible for any misuse or theft of QR codes.
+            </p>
+            <p style="font-size: 14px; line-height: 1.6; margin: 10px 0 0 0;">
+              A valid photo ID must be presented when collecting your wristbands.
+            </p>
+          </div>
+
+          <p style="font-size: 14px; line-height: 1.6; margin-top: 25px;">
+            We look forward to seeing you soon!
           </p>
 
           <p style="font-size: 14px; margin-top: 20px;">
