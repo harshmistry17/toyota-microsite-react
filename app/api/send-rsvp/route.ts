@@ -102,7 +102,7 @@ export async function POST(req: Request) {
           </div>
 
           <p style="font-size: 14px; line-height: 1.6; color: #dc3545; font-weight: bold; margin-top: 20px;">
-            *Please note: As entries are limited, failing to respond to the RSVP may result in losing your spot at the event.
+            *Please note: Admission will be granted on a first-come, first-served basis, subject to capacity.
           </p>
 
           <div style="margin-top: 25px;">
