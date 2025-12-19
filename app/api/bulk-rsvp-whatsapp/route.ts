@@ -35,32 +35,36 @@ export async function POST(req: Request) {
       // Update rsvp_whatsapp status for all successfully sent recipients
       const uids = validRecipients.map((r: { uid: string }) => r.uid)
 
-      console.log(`Updating rsvp_whatsapp for UIDs:`, uids)
+      console.log(`Updating rsvp_whatsapp for ${uids.length} UIDs...`)
 
-      const { data: updateData, error: updateError } = await supabaseAdmin
-        .from("toyota_microsite_users")
-        .update({ rsvp_whatsapp: true })
-        .in("uid", uids)
-        .select("uid")
+      // Batch updates in chunks of 100 to avoid Supabase limits
+      const BATCH_SIZE = 100
+      let totalUpdated = 0
 
-      if (updateError) {
-        console.error("Failed to update rsvp_whatsapp status:", updateError)
-        return NextResponse.json({
-          success: true,
-          message: `${result.message}, but failed to update database status`,
-          totalSent: result.totalSent,
-          totalFailed: result.totalFailed
-        })
+      for (let i = 0; i < uids.length; i += BATCH_SIZE) {
+        const batch = uids.slice(i, i + BATCH_SIZE)
+
+        const { data: updateData, error: updateError } = await supabaseAdmin
+          .from("toyota_microsite_users")
+          .update({ rsvp_whatsapp: true } as never)
+          .in("uid", batch)
+          .select("uid")
+
+        if (updateError) {
+          console.error(`Failed to update batch ${i / BATCH_SIZE + 1}:`, updateError)
+        } else {
+          totalUpdated += updateData?.length || 0
+        }
       }
 
-      console.log(`Updated rsvp_whatsapp for ${updateData?.length || 0} users`)
+      console.log(`Updated rsvp_whatsapp for ${totalUpdated}/${uids.length} users`)
 
       return NextResponse.json({
         success: true,
-        message: result.message,
+        message: `${result.message} (DB updated: ${totalUpdated}/${uids.length})`,
         totalSent: result.totalSent,
         totalFailed: result.totalFailed,
-        dbUpdated: updateData?.length || 0
+        dbUpdated: totalUpdated
       })
     } else {
       return NextResponse.json({
