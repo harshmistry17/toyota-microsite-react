@@ -319,13 +319,13 @@ export default function DashboardPage({ initialUsers, allCities }: DashboardPage
     }
   }
 
-  // ✅ Send RSVP email + WhatsApp to selected users
+  // ✅ Send RSVP email to selected users
   const handleSendRSVPSelected = async () => {
     if (selectedUids.size === 0) return
     const selectedUsers = filteredUsers.filter((u) => selectedUids.has(u.uid))
     for (const user of selectedUsers) {
       if (user.city) {
-        await handleSendRSVPEmail(user.uid, user.name, user.email, user.city, user.mobile)
+        await handleSendRSVPEmail(user.uid, user.name, user.email, user.city)
       }
     }
   }
@@ -388,8 +388,8 @@ export default function DashboardPage({ initialUsers, allCities }: DashboardPage
     }
   }
 
-  // ✅ Send RSVP email + WhatsApp to one user
-  const handleSendRSVPEmail = async (uid: string, name: string, email: string | null, city: string, mobile: string | null) => {
+  // ✅ Send RSVP email to one user
+  const handleSendRSVPEmail = async (uid: string, name: string, email: string | null, city: string) => {
     if (!email) {
       toast.error("User email is missing", {
         position: "bottom-right",
@@ -399,12 +399,11 @@ export default function DashboardPage({ initialUsers, allCities }: DashboardPage
     const res = await fetch("/api/send-rsvp", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ uid, name, email, city, mobile }),
+      body: JSON.stringify({ uid, name, email, city }),
     })
     const data = await res.json()
     if (data.success) {
-      const whatsappMsg = data.whatsapp_sent ? " + WhatsApp" : ""
-      toast.success(`RSVP email${whatsappMsg} sent to ${name}`, {
+      toast.success(`RSVP email sent to ${name}`, {
         position: "bottom-right",
       })
     } else {
