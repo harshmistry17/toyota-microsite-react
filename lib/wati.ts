@@ -159,3 +159,148 @@ export async function sendRegistrationWhatsApp(
     broadcastName: "Toyota Bengaluru Registration"
   })
 }
+
+/**
+ * Send RSVP WhatsApp message with Yes/No buttons
+ * Template: bengaluru_rsvp
+ *
+ * Button URLs format:
+ * - Button 1 (Yes): https://toyotadrumtao.com/{{1}} -> api/rsvp-confirm?uid=xxx&response=yes
+ * - Button 2 (No):  https://toyotadrumtao.com/{{2}} -> api/rsvp-confirm?uid=xxx&response=no
+ *
+ * @param mobile - User's mobile number
+ * @param uid - User's unique ID for RSVP tracking
+ * @returns Promise with success status
+ */
+export async function sendRsvpWhatsApp(
+  mobile: string,
+  uid: string
+): Promise<WatiResponse> {
+  // Parameters for the bengaluru_rsvp template
+  // {{1}} = Yes button URL path (after base domain)
+  // {{2}} = No button URL path (after base domain)
+  const parameters: WatiTemplateParameter[] = [
+    { name: "1", value: `api/rsvp-confirm?uid=${uid}&response=yes` },
+    { name: "2", value: `api/rsvp-confirm?uid=${uid}&response=no` }
+  ]
+
+  return sendWatiTemplateMessage({
+    whatsappNumber: mobile,
+    templateName: "bengaluru_rsvp",
+    parameters,
+    broadcastName: "Toyota Bengaluru RSVP"
+  })
+}
+
+/**
+ * Bulk RSVP recipient interface
+ */
+interface BulkRsvpRecipient {
+  mobile: string
+  uid: string
+}
+
+/**
+ * Bulk RSVP response interface
+ */
+interface BulkRsvpResponse {
+  success: boolean
+  totalSent: number
+  totalFailed: number
+  message?: string
+  error?: string
+}
+
+/**
+ * Send bulk RSVP WhatsApp messages using WATI's bulk API
+ * Template: bengaluru_rsvp
+ *
+ * @param recipients - Array of {mobile, uid} objects
+ * @returns Promise with bulk send results
+ */
+export async function sendBulkRsvpWhatsApp(
+  recipients: BulkRsvpRecipient[]
+): Promise<BulkRsvpResponse> {
+  const watiEndpoint = process.env.WATI_API_ENDPOINT
+  const watiToken = process.env.WATI_API_TOKEN
+
+  if (!watiEndpoint || !watiToken) {
+    return {
+      success: false,
+      totalSent: 0,
+      totalFailed: recipients.length,
+      error: "WATI API credentials not configured"
+    }
+  }
+
+  if (recipients.length === 0) {
+    return {
+      success: false,
+      totalSent: 0,
+      totalFailed: 0,
+      error: "No recipients provided"
+    }
+  }
+
+  try {
+    const baseUrl = watiEndpoint.startsWith('http') ? watiEndpoint : `https://${watiEndpoint}`
+    const url = `${baseUrl}/api/v1/sendTemplateMessages`
+
+    // Build receivers array with personalized RSVP links for each user
+    const receivers = recipients.map(recipient => ({
+      whatsappNumber: formatPhoneNumber(recipient.mobile),
+      customParams: [
+        { name: "1", value: `api/rsvp-confirm?uid=${recipient.uid}&response=yes` },
+        { name: "2", value: `api/rsvp-confirm?uid=${recipient.uid}&response=no` }
+      ]
+    }))
+
+    const requestBody = {
+      template_name: "bengaluru_rsvp",
+      broadcast_name: `Toyota RSVP Bulk ${new Date().toISOString().split('T')[0]}`,
+      receivers
+    }
+
+    console.log(`Sending bulk RSVP WhatsApp to ${recipients.length} recipients...`)
+
+    const authHeader = watiToken.startsWith('Bearer ') ? watiToken : `Bearer ${watiToken}`
+
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Authorization": authHeader,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(requestBody)
+    })
+
+    const responseData = await response.json()
+
+    if (!response.ok) {
+      console.error("WATI Bulk API error:", responseData)
+      return {
+        success: false,
+        totalSent: 0,
+        totalFailed: recipients.length,
+        error: responseData.message || `HTTP ${response.status}: ${response.statusText}`
+      }
+    }
+
+    console.log("WATI Bulk RSVP sent successfully:", responseData)
+    return {
+      success: true,
+      totalSent: recipients.length,
+      totalFailed: 0,
+      message: `Successfully queued ${recipients.length} RSVP WhatsApp messages`
+    }
+
+  } catch (error) {
+    console.error("Error sending bulk RSVP WhatsApp:", error)
+    return {
+      success: false,
+      totalSent: 0,
+      totalFailed: recipients.length,
+      error: error instanceof Error ? error.message : "Unknown error occurred"
+    }
+  }
+}

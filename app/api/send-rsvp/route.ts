@@ -1,10 +1,11 @@
 import { NextResponse } from "next/server"
 import nodemailer from "nodemailer"
 import { supabaseAdmin } from "@/lib/supabase"
+import { sendRsvpWhatsApp } from "@/lib/wati"
 
 export async function POST(req: Request) {
   try {
-    const { uid, name, email, city } = await req.json()
+    const { uid, name, email, city, mobile } = await req.json()
 
     if (!uid || !name || !email || !city) {
       return NextResponse.json(
@@ -137,6 +138,18 @@ export async function POST(req: Request) {
 
     await transporter.sendMail(mailOptions)
 
+    // Send WhatsApp RSVP message if mobile number is provided
+    let whatsappSent = false
+    if (mobile) {
+      const whatsappResult = await sendRsvpWhatsApp(mobile, uid)
+      whatsappSent = whatsappResult.success
+      if (whatsappResult.success) {
+        console.log("WhatsApp RSVP sent successfully to:", mobile)
+      } else {
+        console.error("WhatsApp RSVP failed:", whatsappResult.error)
+      }
+    }
+
     const { data: existingUser, error: existingUserError } = await supabaseAdmin
       .from("toyota_microsite_users")
       .select("rsvp_status")
@@ -150,6 +163,7 @@ export async function POST(req: Request) {
     const alreadyConfirmed =
       existingUser?.rsvp_status === "confirmed" || existingUser?.rsvp_status === true
 
+    // Update rsvp_status if not already confirmed
     if (!alreadyConfirmed) {
       const { error: statusUpdateError } = await supabaseAdmin
         .from("toyota_microsite_users")
@@ -161,9 +175,22 @@ export async function POST(req: Request) {
       }
     }
 
+    // Update rsvp_whatsapp status if WhatsApp was sent successfully
+    if (whatsappSent) {
+      const { error: whatsappUpdateError } = await supabaseAdmin
+        .from("toyota_microsite_users")
+        .update({ rsvp_whatsapp: true })
+        .eq("uid", uid)
+
+      if (whatsappUpdateError) {
+        console.error("Failed to update rsvp_whatsapp:", whatsappUpdateError)
+      }
+    }
+
     return NextResponse.json({
       success: true,
-      message: "RSVP email sent successfully!"
+      message: "RSVP email sent successfully!",
+      whatsapp_sent: whatsappSent
     })
   } catch (error) {
     console.error("Error in /api/send-rsvp:", error)

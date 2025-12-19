@@ -41,12 +41,13 @@ export interface Database {
             occupation: string | null
             birthdate: string | null
             city: string | null
-            car_model: string | null // 🆕 Added here
+            car_model: string | null
             image_link: string | null
             email_status: boolean
             resend_status: boolean
             whatsapp_status: boolean
             rsvp_status: string | boolean | null
+            rsvp_whatsapp: boolean
             is_attended_event: boolean
             is_game_played: boolean
             created_at: string
@@ -58,12 +59,13 @@ export interface Database {
             occupation: string | null
             birthdate: string | null
             city: string | null
-            car_model?: string | null // 🆕 Added here
+            car_model?: string | null
             image_link?: string | null
             email_status?: boolean
             resend_status?: boolean
             whatsapp_status?: boolean
             rsvp_status?: string | boolean | null
+            rsvp_whatsapp?: boolean
             is_attended_event?: boolean
             is_game_played?: boolean
         }

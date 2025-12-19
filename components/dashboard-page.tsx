@@ -82,10 +82,12 @@ export default function DashboardPage({ initialUsers, allCities }: DashboardPage
   const [resendStatusFilter, setResendStatusFilter] = useState<string>("all")
   const [rsvpStatusFilter, setRsvpStatusFilter] = useState<string>("all")
   const [whatsappStatusFilter, setWhatsappStatusFilter] = useState<string>("all")
+  const [rsvpWhatsappFilter, setRsvpWhatsappFilter] = useState<string>("all")
   const [searchQuery, setSearchQuery] = useState<string>("")
   const [entriesPerPage, setEntriesPerPage] = useState<number>(10)
   const [currentPage, setCurrentPage] = useState<number>(1)
   const [selectedUids, setSelectedUids] = useState<Set<string>>(new Set())
+  const [isSendingRsvpWa, setIsSendingRsvpWa] = useState<boolean>(false)
 
   const handleLogout = () => {
     auth.logout()
@@ -178,28 +180,31 @@ export default function DashboardPage({ initialUsers, allCities }: DashboardPage
       const whatsappMatch = whatsappStatusFilter === "all" ||
         (whatsappStatusFilter === "sent" && user.whatsapp_status) ||
         (whatsappStatusFilter === "not_sent" && !user.whatsapp_status)
-      const searchMatch = searchQuery === "" || 
+      const rsvpWhatsappMatch = rsvpWhatsappFilter === "all" ||
+        (rsvpWhatsappFilter === "sent" && user.rsvp_whatsapp) ||
+        (rsvpWhatsappFilter === "not_sent" && !user.rsvp_whatsapp)
+      const searchMatch = searchQuery === "" ||
         user.name.toLowerCase().includes(normalizedSearch) ||
         user.email?.toLowerCase().includes(normalizedSearch) ||
         user.mobile?.includes(searchQuery) ||
         user.car_model?.toLowerCase().includes(normalizedSearch) ||
         user.occupation?.toLowerCase().includes(normalizedSearch)
-      
+
       // ✅ NEW: Date filter
       const userDate = new Date(user.created_at).setHours(0, 0, 0, 0)
-      const dateMatch = 
+      const dateMatch =
         (!startDate || userDate >= new Date(startDate).setHours(0, 0, 0, 0)) &&
         (!endDate || userDate <= new Date(endDate).setHours(23, 59, 59, 999))
-      
-      return cityMatch && ageMatch && emailMatch && resendMatch && rsvpMatch && whatsappMatch && searchMatch && dateMatch
+
+      return cityMatch && ageMatch && emailMatch && resendMatch && rsvpMatch && whatsappMatch && rsvpWhatsappMatch && searchMatch && dateMatch
     })
-  }, [sortedUsers, cityFilter, ageFilter, emailStatusFilter, resendStatusFilter, rsvpStatusFilter, whatsappStatusFilter, searchQuery, startDate, endDate])
+  }, [sortedUsers, cityFilter, ageFilter, emailStatusFilter, resendStatusFilter, rsvpStatusFilter, whatsappStatusFilter, rsvpWhatsappFilter, searchQuery, startDate, endDate])
 
   // Step 3: Update useEffect dependencies for page reset (around line 210)
   // FIND THIS:
   useEffect(() => {
     setCurrentPage(1)
-  }, [cityFilter, ageFilter, emailStatusFilter, resendStatusFilter, rsvpStatusFilter, whatsappStatusFilter, searchQuery, entriesPerPage])
+  }, [cityFilter, ageFilter, emailStatusFilter, resendStatusFilter, rsvpStatusFilter, whatsappStatusFilter, rsvpWhatsappFilter, searchQuery, entriesPerPage])
 
   // REPLACE WITH THIS:
   useEffect(() => {
@@ -225,7 +230,7 @@ export default function DashboardPage({ initialUsers, allCities }: DashboardPage
   // Reset to page 1 when filters change
   useEffect(() => {
     setCurrentPage(1)
-  }, [cityFilter, ageFilter, emailStatusFilter, resendStatusFilter, rsvpStatusFilter, whatsappStatusFilter, searchQuery, entriesPerPage])
+  }, [cityFilter, ageFilter, emailStatusFilter, resendStatusFilter, rsvpStatusFilter, whatsappStatusFilter, rsvpWhatsappFilter, searchQuery, entriesPerPage])
 
   // ✅ Checkbox logic
   const handleSelectAll = (checked: boolean) => {
@@ -314,13 +319,13 @@ export default function DashboardPage({ initialUsers, allCities }: DashboardPage
     }
   }
 
-  // ✅ Send RSVP email to selected users
+  // ✅ Send RSVP email + WhatsApp to selected users
   const handleSendRSVPSelected = async () => {
     if (selectedUids.size === 0) return
     const selectedUsers = filteredUsers.filter((u) => selectedUids.has(u.uid))
     for (const user of selectedUsers) {
       if (user.city) {
-        await handleSendRSVPEmail(user.uid, user.name, user.email, user.city)
+        await handleSendRSVPEmail(user.uid, user.name, user.email, user.city, user.mobile)
       }
     }
   }
@@ -333,8 +338,58 @@ export default function DashboardPage({ initialUsers, allCities }: DashboardPage
     }
   }
 
-  // ✅ Send RSVP email to one user
-  const handleSendRSVPEmail = async (uid: string, name: string, email: string | null, city: string) => {
+  // ✅ Send bulk RSVP WhatsApp to selected users
+  const handleSendRsvpWhatsAppSelected = async () => {
+    if (selectedUids.size === 0 || isSendingRsvpWa) return
+
+    const selectedUsers = filteredUsers.filter((u) => selectedUids.has(u.uid))
+    const recipientsWithMobile = selectedUsers
+      .filter((u) => u.mobile)
+      .map((u) => ({ uid: u.uid, mobile: u.mobile! }))
+
+    if (recipientsWithMobile.length === 0) {
+      toast.error("No selected users have mobile numbers", {
+        position: "bottom-right",
+      })
+      return
+    }
+
+    setIsSendingRsvpWa(true)
+
+    const skippedCount = selectedUsers.length - recipientsWithMobile.length
+    const skippedMsg = skippedCount > 0 ? ` (${skippedCount} skipped - no mobile)` : ""
+    toast.info(`Sending RSVP WhatsApp to ${recipientsWithMobile.length} users...${skippedMsg}`, {
+      position: "bottom-right",
+    })
+
+    try {
+      const res = await fetch("/api/bulk-rsvp-whatsapp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ recipients: recipientsWithMobile }),
+      })
+      const data = await res.json()
+
+      if (data.success) {
+        toast.success(`${data.message}`, {
+          position: "bottom-right",
+        })
+      } else {
+        toast.error(`Failed: ${data.message}`, {
+          position: "bottom-right",
+        })
+      }
+    } catch (error) {
+      toast.error("Failed to send bulk RSVP WhatsApp", {
+        position: "bottom-right",
+      })
+    } finally {
+      setIsSendingRsvpWa(false)
+    }
+  }
+
+  // ✅ Send RSVP email + WhatsApp to one user
+  const handleSendRSVPEmail = async (uid: string, name: string, email: string | null, city: string, mobile: string | null) => {
     if (!email) {
       toast.error("User email is missing", {
         position: "bottom-right",
@@ -344,11 +399,12 @@ export default function DashboardPage({ initialUsers, allCities }: DashboardPage
     const res = await fetch("/api/send-rsvp", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ uid, name, email, city }),
+      body: JSON.stringify({ uid, name, email, city, mobile }),
     })
     const data = await res.json()
     if (data.success) {
-      toast.success(`RSVP email sent to ${name}`, {
+      const whatsappMsg = data.whatsapp_sent ? " + WhatsApp" : ""
+      toast.success(`RSVP email${whatsappMsg} sent to ${name}`, {
         position: "bottom-right",
       })
     } else {
@@ -378,6 +434,7 @@ export default function DashboardPage({ initialUsers, allCities }: DashboardPage
       { header: "Resend Status", value: (user: UserData) => (user.resend_status ? "Resent" : "Not Resent") },
       { header: "WhatsApp Status", value: (user: UserData) => (user.whatsapp_status ? "Sent" : "Not Sent") },
       { header: "RSVP Status", value: (user: UserData) => rsvpStatusLabels[normalizeRsvpStatus(user.rsvp_status)] },
+      { header: "RSVP WhatsApp", value: (user: UserData) => (user.rsvp_whatsapp ? "Sent" : "Not Sent") },
       { header: "Attended Event", value: (user: UserData) => (user.is_attended_event ? "Yes" : "No") },
       { header: "Game Played", value: (user: UserData) => (user.is_game_played ? "Yes" : "No") },
       { header: "Registered At", value: (user: UserData) => formatTableDateTime(user.created_at) },
@@ -663,6 +720,17 @@ export default function DashboardPage({ initialUsers, allCities }: DashboardPage
               </SelectContent>
             </Select>
 
+            <Select value={rsvpWhatsappFilter} onValueChange={setRsvpWhatsappFilter}>
+              <SelectTrigger className="w-[180px] border-gray-400">
+                <SelectValue placeholder="RSVP WhatsApp" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All (RSVP WA)</SelectItem>
+                <SelectItem value="sent">Sent</SelectItem>
+                <SelectItem value="not_sent">Not Sent</SelectItem>
+              </SelectContent>
+            </Select>
+
             <Select
               value={entriesPerPage.toString()}
               onValueChange={(v) => {
@@ -715,6 +783,15 @@ export default function DashboardPage({ initialUsers, allCities }: DashboardPage
             </Button>
 
             <Button
+              disabled={selectedUids.size === 0 || isSendingRsvpWa}
+              onClick={handleSendRsvpWhatsAppSelected}
+              className="bg-green-600 hover:bg-green-700 text-white"
+            >
+              <MessageCircle className="w-4 h-4 mr-2" />
+              {isSendingRsvpWa ? "Sending..." : `Send RSVP WA (${selectedUids.size})`}
+            </Button>
+
+            <Button
               disabled={selectedUids.size === 0}
               onClick={handleResendSelected}
               className="bg-purple-600 hover:bg-purple-700 text-white"
@@ -756,6 +833,7 @@ export default function DashboardPage({ initialUsers, allCities }: DashboardPage
                   <TableHead>Resend Status</TableHead>
                   <TableHead>WhatsApp</TableHead>
                   <TableHead>RSVP</TableHead>
+                  <TableHead>RSVP WA</TableHead>
                   <TableHead>QR</TableHead>
                   <TableHead>Registered</TableHead>
                   <TableHead>Actions</TableHead>
@@ -813,6 +891,13 @@ export default function DashboardPage({ initialUsers, allCities }: DashboardPage
                         >
                           {rsvpStatusLabels[rsvpStatus]}
                         </span>
+                      </TableCell>
+                      <TableCell>
+                        {user.rsvp_whatsapp ? (
+                          <MessageCircle className="text-green-600 w-5 h-5" />
+                        ) : (
+                          <X className="text-red-500 w-5 h-5" />
+                        )}
                       </TableCell>
                       <TableCell>
                         <Button
