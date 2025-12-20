@@ -32,6 +32,7 @@ import {
   Search,
   Download,
   RefreshCcw,
+  UserCheck,
 } from "lucide-react"
 import QRCode from "qrcode"
 import {
@@ -509,8 +510,20 @@ export default function DashboardPage({ initialUsers, allCities }: DashboardPage
     return counts
   }, [users, liveCities])
 
+  const citywiseAttendedCounts = useMemo(() => {
+    const counts: Record<string, number> = {}
+    liveCities.forEach((c) => (counts[c.city_name] = 0))
+    users
+      .filter((u) => u.is_attended_event)
+      .forEach((u) => {
+        if (u.city && counts[u.city] !== undefined) counts[u.city]++
+      })
+    return counts
+  }, [users, liveCities])
+
   const totalUsers = users.length
   const totalRSVPs = users.filter((u) => normalizeRsvpStatus(u.rsvp_status) === "confirmed").length
+  const totalAttended = users.filter((u) => u.is_attended_event).length
 
   
   // ✅ UI
@@ -545,7 +558,7 @@ export default function DashboardPage({ initialUsers, allCities }: DashboardPage
       </div>
 
       {/* === Count Cards Section === */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         {/* Users Card */}
         <Card className="bg-white text-black border border-gray-300 shadow-md">
           <CardHeader className="flex items-center gap-2">
@@ -584,6 +597,28 @@ export default function DashboardPage({ initialUsers, allCities }: DashboardPage
                 >
                   <span className="text-xs font-semibold text-center">{city.city_name}</span>
                   <span className="text-lg font-bold">{citywiseRSVPCounts[city.city_name] ?? 0}</span>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Attended Card */}
+        <Card className="bg-white text-black border border-gray-300 shadow-md">
+          <CardHeader className="flex items-center gap-2">
+            <UserCheck className="text-blue-600 w-6 h-6" />
+            <CardTitle className="text-xl font-semibold">Total Attended</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-4xl font-bold mb-4 text-blue-700">{totalAttended}</div>
+            <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
+              {liveCities.map((city) => (
+                <div
+                  key={city.city_name}
+                  className="flex flex-col justify-center items-center bg-gray-50 border rounded-md p-2"
+                >
+                  <span className="text-xs font-semibold text-center">{city.city_name}</span>
+                  <span className="text-lg font-bold">{citywiseAttendedCounts[city.city_name] ?? 0}</span>
                 </div>
               ))}
             </div>
