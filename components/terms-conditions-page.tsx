@@ -43,6 +43,18 @@ export default function TermsConditionsPage({ onBack }: TermsConditionsPageProps
           </section>
 
           <section>
+            <h2 className="text-lg font-bold text-red-600 mb-3">Participate to Win</h2>
+            <ul className="leading-relaxed text-sm list-disc list-inside space-y-1">
+              <li>Open to attendees present at the venue during the draw.</li>
+              <li>One entry per person unless stated otherwise.</li>
+              <li>Winners will be selected at random; the organizer's decision is final.</li>
+              <li>Winners will be contacted by the organizer.</li>
+              <li>Prizes are non-transferable and not redeemable for cash.</li>
+              <li>Organizers reserve the right to amend or withdraw the draw without prior notice.</li>
+            </ul>
+          </section>
+
+          <section>
             <h2 className="text-lg font-bold text-red-600 mb-3">QR Code Policy</h2>
             <p className="leading-relaxed  text-sm">
               Do not share your QR code/ticket with anyone. Once scanned, it cannot be reused. The organizers are not
